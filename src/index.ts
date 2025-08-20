@@ -12,6 +12,11 @@ import {
   deletePaper,
   clearCache,
   clearAll,
+  initializeSetup,
+  toggleSetup,
+  updateProviderUI,
+  saveApiKeyFromUI,
+  clearActiveProviderFromUI,
 } from "./ui.js";
 
 interface PaperData {
@@ -307,6 +312,9 @@ function handleLoadCachedPaper(arxivId: string): void {
 
 // Initialize the application
 function initializeApp(): void {
+  // Initialize setup section
+  initializeSetup();
+  
   // Make functions globally available for onclick handlers
   (window as any).showTab = showTab;
   (window as any).generateSummary = generateSummary;
@@ -319,6 +327,10 @@ function initializeApp(): void {
   (window as any).deletePaper = deletePaper;
   (window as any).clearCache = clearCache;
   (window as any).clearAll = clearAll;
+  (window as any).toggleSetup = toggleSetup;
+  (window as any).updateProviderUI = updateProviderUI;
+  (window as any).saveApiKey = saveApiKeyFromUI;
+  (window as any).clearActiveProviderFromUI = clearActiveProviderFromUI;
 
   // Event listeners
   const qaInput = document.getElementById("qa-input");

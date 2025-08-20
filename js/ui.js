@@ -1,5 +1,5 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache } from "./cache.js";
+import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, hasActiveProvider } from "./cache.js";
 export function showError(message) {
     const container = document.getElementById("error-container");
     if (container) {
@@ -234,4 +234,108 @@ export function clearAll() {
     resetGeneratedContent();
     updateCacheStatus(null);
     showSuccess("All content cleared");
+}
+// Setup section management
+export function initializeSetup() {
+    updateActiveProviderDisplay();
+    // Collapse setup if active provider exists
+    if (hasActiveProvider()) {
+        const setupContent = document.getElementById("setup-content");
+        const setupToggle = document.getElementById("setup-toggle");
+        if (setupContent)
+            setupContent.style.display = "none";
+        if (setupToggle)
+            setupToggle.textContent = "▶";
+    }
+}
+export function toggleSetup() {
+    const setupContent = document.getElementById("setup-content");
+    const setupToggle = document.getElementById("setup-toggle");
+    if (!setupContent || !setupToggle)
+        return;
+    const isVisible = setupContent.style.display !== "none";
+    setupContent.style.display = isVisible ? "none" : "block";
+    setupToggle.textContent = isVisible ? "▶" : "▼";
+}
+export function updateProviderUI() {
+    const providerSelect = document.getElementById("provider-select");
+    const apiKeyInput = document.getElementById("api-key-input");
+    if (!providerSelect || !apiKeyInput)
+        return;
+    const provider = providerSelect.value;
+    if (provider) {
+        const placeholders = {
+            openai: "sk-...",
+            anthropic: "sk-ant-...",
+            cohere: "Your Cohere API key"
+        };
+        apiKeyInput.placeholder = placeholders[provider];
+        apiKeyInput.disabled = false;
+        apiKeyInput.value = ""; // Always start fresh
+    }
+    else {
+        apiKeyInput.placeholder = "Select a provider first";
+        apiKeyInput.disabled = true;
+        apiKeyInput.value = "";
+    }
+}
+export function saveApiKeyFromUI() {
+    const providerSelect = document.getElementById("provider-select");
+    const apiKeyInput = document.getElementById("api-key-input");
+    if (!providerSelect || !apiKeyInput)
+        return;
+    const provider = providerSelect.value;
+    const apiKey = apiKeyInput.value.trim();
+    if (!provider) {
+        showError("Please select a provider");
+        return;
+    }
+    if (!apiKey) {
+        showError("Please enter an API key");
+        return;
+    }
+    // Save the active provider
+    saveActiveProvider(provider, apiKey);
+    updateActiveProviderDisplay();
+    showSuccess(`${provider} API key saved`);
+    // Clear inputs and collapse setup
+    apiKeyInput.value = "";
+    providerSelect.value = "";
+    apiKeyInput.disabled = true;
+    apiKeyInput.placeholder = "Select a provider first";
+    // Auto-collapse setup section
+    const setupContent = document.getElementById("setup-content");
+    const setupToggle = document.getElementById("setup-toggle");
+    if (setupContent)
+        setupContent.style.display = "none";
+    if (setupToggle)
+        setupToggle.textContent = "▶";
+}
+export function clearActiveProviderFromUI() {
+    clearActiveProvider();
+    updateActiveProviderDisplay();
+    showSuccess("API provider cleared");
+}
+function updateActiveProviderDisplay() {
+    const savedKeysContainer = document.getElementById("saved-keys");
+    if (!savedKeysContainer)
+        return;
+    const activeProvider = getActiveProvider();
+    if (!activeProvider || !activeProvider.apiKey || !activeProvider.provider) {
+        savedKeysContainer.innerHTML = "";
+        return;
+    }
+    const providerNames = {
+        openai: "OpenAI",
+        anthropic: "Anthropic",
+        cohere: "Cohere"
+    };
+    savedKeysContainer.innerHTML = `
+    <div class="saved-keys-header">Active API Provider:</div>
+    <div class="saved-key-item">
+      <span class="provider-name">${providerNames[activeProvider.provider]}</span>
+      <span class="key-preview">${activeProvider.apiKey.substring(0, 8)}...</span>
+      <button class="btn btn-small btn-danger" onclick="clearActiveProviderFromUI()">Change</button>
+    </div>
+  `;
 }

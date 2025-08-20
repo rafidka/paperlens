@@ -1,14 +1,10 @@
 // LLM provider integrations for PaperLens
+import { getActiveProvider } from "./cache.js";
 export function getSelectedProvider() {
-    const openaiKey = document.getElementById("openai-key")?.value.trim();
-    const cohereKey = document.getElementById("cohere-key")?.value.trim();
-    const anthropicKey = document.getElementById("anthropic-key")?.value.trim();
-    if (openaiKey)
-        return { provider: "openai", key: openaiKey };
-    if (anthropicKey)
-        return { provider: "anthropic", key: anthropicKey };
-    if (cohereKey)
-        return { provider: "cohere", key: cohereKey };
+    const activeProvider = getActiveProvider();
+    if (activeProvider) {
+        return { provider: activeProvider.provider, key: activeProvider.apiKey };
+    }
     return null;
 }
 export async function callLLM(messages, provider, apiKey) {

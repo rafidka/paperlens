@@ -132,6 +132,110 @@
     color: #721c24;
 }
 
+/* Setup Section */
+.setup-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+.setup-header:hover {
+    color: #3498db;
+}
+
+.setup-toggle {
+    font-size: 12px;
+    color: #7f8c8d;
+    transition: transform 0.3s ease;
+}
+
+.setup-content {
+    margin-top: 15px;
+}
+
+.api-config {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.api-key-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.api-key-group select,
+.api-key-group input {
+    flex: 1;
+}
+
+.api-key-group:last-child {
+    flex-direction: row;
+    align-items: end;
+    gap: 10px;
+}
+
+.api-key-group:last-child input {
+    flex: 1;
+}
+
+.btn-small {
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Saved Keys Display */
+.saved-keys {
+    margin-top: 15px;
+}
+
+.saved-keys-header {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.saved-key-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.provider-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.key-preview {
+    font-family: monospace;
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
 /* Mobile responsiveness for components */
 @media (max-width: 768px) {
     .tabs {
@@ -140,5 +244,21 @@
     
     .library-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .api-key-group:last-child {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .saved-key-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .saved-key-item > div {
+        display: flex;
+        justify-content: space-between;
     }
 }

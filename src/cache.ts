@@ -28,6 +28,7 @@ interface QAItem {
 
 const CACHE_PREFIX = 'paperlens_';
 const LIBRARY_KEY = 'paperlens_library';
+const API_KEYS_KEY = 'paperlens_api_keys';
 
 export function getCacheKey(arxivId: string): string {
     return CACHE_PREFIX + arxivId;
@@ -90,4 +91,28 @@ export function clearAllCache(): void {
         localStorage.removeItem(getCacheKey(paper.id));
     });
     localStorage.removeItem(LIBRARY_KEY);
+}
+
+// API Key management - Single active provider
+export interface ActiveProvider {
+    provider: 'openai' | 'anthropic' | 'cohere';
+    apiKey: string;
+}
+
+export function getActiveProvider(): ActiveProvider | null {
+    const stored = localStorage.getItem(API_KEYS_KEY);
+    return stored ? JSON.parse(stored) : null;
+}
+
+export function saveActiveProvider(provider: 'openai' | 'anthropic' | 'cohere', apiKey: string): void {
+    const activeProvider: ActiveProvider = { provider, apiKey };
+    localStorage.setItem(API_KEYS_KEY, JSON.stringify(activeProvider));
+}
+
+export function clearActiveProvider(): void {
+    localStorage.removeItem(API_KEYS_KEY);
+}
+
+export function hasActiveProvider(): boolean {
+    return getActiveProvider() !== null;
 }

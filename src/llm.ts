@@ -1,4 +1,5 @@
 // LLM provider integrations for PaperLens
+import { getActiveProvider } from "./cache.js";
 
 interface LLMProvider {
   provider: "openai" | "anthropic" | "cohere";
@@ -11,14 +12,12 @@ interface ChatMessage {
 }
 
 export function getSelectedProvider(): LLMProvider | null {
-  const openaiKey = (document.getElementById("openai-key") as HTMLInputElement)?.value.trim();
-  const cohereKey = (document.getElementById("cohere-key") as HTMLInputElement)?.value.trim();
-  const anthropicKey = (document.getElementById("anthropic-key") as HTMLInputElement)?.value.trim();
-
-  if (openaiKey) return { provider: "openai", key: openaiKey };
-  if (anthropicKey) return { provider: "anthropic", key: anthropicKey };
-  if (cohereKey) return { provider: "cohere", key: cohereKey };
-
+  const activeProvider = getActiveProvider();
+  
+  if (activeProvider) {
+    return { provider: activeProvider.provider, key: activeProvider.apiKey };
+  }
+  
   return null;
 }
 

@@ -1,6 +1,7 @@
 // Cache management for PaperLens
 const CACHE_PREFIX = 'paperlens_';
 const LIBRARY_KEY = 'paperlens_library';
+const API_KEYS_KEY = 'paperlens_api_keys';
 export function getCacheKey(arxivId) {
     return CACHE_PREFIX + arxivId;
 }
@@ -53,4 +54,18 @@ export function clearAllCache() {
         localStorage.removeItem(getCacheKey(paper.id));
     });
     localStorage.removeItem(LIBRARY_KEY);
+}
+export function getActiveProvider() {
+    const stored = localStorage.getItem(API_KEYS_KEY);
+    return stored ? JSON.parse(stored) : null;
+}
+export function saveActiveProvider(provider, apiKey) {
+    const activeProvider = { provider, apiKey };
+    localStorage.setItem(API_KEYS_KEY, JSON.stringify(activeProvider));
+}
+export function clearActiveProvider() {
+    localStorage.removeItem(API_KEYS_KEY);
+}
+export function hasActiveProvider() {
+    return getActiveProvider() !== null;
 }

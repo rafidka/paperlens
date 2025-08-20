@@ -18,6 +18,32 @@
             <p>AI-Powered Arxiv Paper Reader with Summary, Q&A, and Readability Enhancement</p>
         </div>
 
+        <div class="setup-panel">
+            <div class="setup-header" onclick="toggleSetup()">
+                <h3>⚙️ Setup</h3>
+                <span id="setup-toggle" class="setup-toggle">▼</span>
+            </div>
+            <div id="setup-content" class="setup-content">
+                <div class="api-config">
+                    <div class="api-key-group">
+                        <label for="provider-select">AI Provider:</label>
+                        <select id="provider-select" onchange="updateProviderUI()">
+                            <option value="">Select Provider</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="cohere">Cohere</option>
+                        </select>
+                    </div>
+                    <div class="api-key-group">
+                        <label for="api-key-input">API Key:</label>
+                        <input type="password" id="api-key-input" placeholder="Enter your API key">
+                        <button class="btn btn-small btn-primary" onclick="saveApiKey()">Save</button>
+                    </div>
+                    <div id="saved-keys" class="saved-keys"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="library-panel">
             <h3>📚 Paper Library</h3>
             <div class="button-group">
@@ -29,23 +55,8 @@
             </div>
         </div>
 
-        <div class="setup-panel">
-            <h3>Setup</h3>
-            <div class="api-keys">
-                <div class="api-key-group">
-                    <label for="openai-key">OpenAI API Key:</label>
-                    <input type="password" id="openai-key" placeholder="sk-...">
-                </div>
-                <div class="api-key-group">
-                    <label for="cohere-key">Cohere API Key:</label>
-                    <input type="password" id="cohere-key" placeholder="Your Cohere API key">
-                </div>
-                <div class="api-key-group">
-                    <label for="anthropic-key">Anthropic API Key:</label>
-                    <input type="password" id="anthropic-key" placeholder="sk-ant-...">
-                </div>
-            </div>
-
+        <div class="load-paper-panel">
+            <h3>📄 Load Paper</h3>
             <div class="paper-input">
                 <label for="arxiv-url">Arxiv Paper URL or ID:</label>
                 <input type="text" id="arxiv-url" placeholder="https://arxiv.org/abs/2301.00001 or 2301.00001">

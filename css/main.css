@@ -38,7 +38,7 @@ body {
 }
 
 /* Panel layouts */
-.setup-panel, .content-area {
+.setup-panel, .load-paper-panel, .content-area {
     background: white;
     padding: 20px;
     border-radius: 10px;

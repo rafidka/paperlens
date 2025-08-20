@@ -2,7 +2,7 @@
 import { loadPaper, extractArxivId } from "./paper.js";
 import { getSelectedProvider, callLLM, READABILITY_PROMPT } from "./llm.js";
 import { cachePaper } from "./cache.js";
-import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, } from "./ui.js";
+import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, } from "./ui.js";
 // Global state
 let currentPaper = null;
 let qaHistory = [];
@@ -241,6 +241,8 @@ function handleLoadCachedPaper(arxivId) {
 }
 // Initialize the application
 function initializeApp() {
+    // Initialize setup section
+    initializeSetup();
     // Make functions globally available for onclick handlers
     window.showTab = showTab;
     window.generateSummary = generateSummary;
@@ -253,6 +255,10 @@ function initializeApp() {
     window.deletePaper = deletePaper;
     window.clearCache = clearCache;
     window.clearAll = clearAll;
+    window.toggleSetup = toggleSetup;
+    window.updateProviderUI = updateProviderUI;
+    window.saveApiKey = saveApiKeyFromUI;
+    window.clearActiveProviderFromUI = clearActiveProviderFromUI;
     // Event listeners
     const qaInput = document.getElementById("qa-input");
     qaInput?.addEventListener("keydown", function (e) {
