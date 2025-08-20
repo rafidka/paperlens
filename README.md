@@ -17,7 +17,6 @@ A static web application for reading and analyzing academic papers from Arxiv us
 ```
 paperlens/
 ├── index.html          # Main HTML structure
-├── paperlens.html      # Original monolithic version
 ├── css/
 │   ├── main.css       # Core styles (layout, buttons, forms)
 │   └── components.css # Component styles (tabs, library, cache indicators)
@@ -41,12 +40,10 @@ paperlens/
 
 ### Quick Start
 
-**Option 1: Monolithic Version (Direct browser opening)**
-1. Open `paperlens.html` directly in your browser
-2. Enter your API key(s) for at least one LLM provider  
-3. Start analyzing papers!
+**GitHub Pages (Recommended):**
+Visit https://rafidka.github.io/paperlens/ to use the deployed version
 
-**Option 2: Modular Version (Development)**
+**Local Development:**
 ```bash
 # Compile TypeScript to JavaScript
 npx tsc
@@ -78,10 +75,10 @@ php -S localhost:8000
 
 ## Browser Compatibility
 
-- **Monolithic version**: Works in any modern browser when opened directly
-- **Modular version**: Requires ES6 module support and HTTP server (due to CORS policy)  
+- Requires ES6 module support and HTTP server (due to CORS policy)  
 - Works offline after initial paper loading and caching
-- TypeScript compilation required for modular version development
+- TypeScript compilation required for local development
+- Deployed version works directly in any modern browser
 
 ## Development
 
