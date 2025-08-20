@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperLens - AI-Powered Arxiv Paper Reader</title>
+
+    <!-- CSS Imports -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 PaperLens</h1>
+            <p>AI-Powered Arxiv Paper Reader with Summary, Q&A, and Readability Enhancement</p>
+        </div>
+
+        <div class="library-panel">
+            <h3>📚 Paper Library</h3>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="showLibrary()">Show Cached Papers</button>
+                <button class="btn btn-secondary" onclick="clearCache()">Clear Cache</button>
+            </div>
+            <div id="library-container" style="display: none;">
+                <div id="library-grid" class="library-grid"></div>
+            </div>
+        </div>
+
+        <div class="setup-panel">
+            <h3>Setup</h3>
+            <div class="api-keys">
+                <div class="api-key-group">
+                    <label for="openai-key">OpenAI API Key:</label>
+                    <input type="password" id="openai-key" placeholder="sk-...">
+                </div>
+                <div class="api-key-group">
+                    <label for="cohere-key">Cohere API Key:</label>
+                    <input type="password" id="cohere-key" placeholder="Your Cohere API key">
+                </div>
+                <div class="api-key-group">
+                    <label for="anthropic-key">Anthropic API Key:</label>
+                    <input type="password" id="anthropic-key" placeholder="sk-ant-...">
+                </div>
+            </div>
+
+            <div class="paper-input">
+                <label for="arxiv-url">Arxiv Paper URL or ID:</label>
+                <input type="text" id="arxiv-url" placeholder="https://arxiv.org/abs/2301.00001 or 2301.00001">
+                <span id="cache-status" class="cache-status" style="display: none;"></span>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="loadPaper()">Load Paper</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+            </div>
+        </div>
+
+        <div id="paper-section" class="content-area" style="display: none;">
+            <h3 id="paper-title">Paper Title</h3>
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('summary')">Summary</button>
+                <button class="tab" onclick="showTab('concepts')">Key Concepts</button>
+                <button class="tab" onclick="showTab('readable')">Readable Version</button>
+                <button class="tab" onclick="showTab('qa')">Q&A</button>
+                <button class="tab" onclick="showTab('original')">Original</button>
+            </div>
+
+            <div id="summary-tab" class="tab-content active">
+                <h4>Paper Summary</h4>
+                <button class="btn btn-success" onclick="generateSummary()">Generate Summary</button>
+                <div id="summary-content" class="paper-content" style="display: none;"></div>
+            </div>
+
+            <div id="concepts-tab" class="tab-content">
+                <h4>Key Concepts</h4>
+                <button class="btn btn-success" onclick="extractConcepts()">Extract Key Concepts</button>
+                <div id="concepts-content" class="paper-content" style="display: none;"></div>
+            </div>
+
+            <div id="readable-tab" class="tab-content">
+                <h4>Readable Version (Text-to-Speech Optimized)</h4>
+                <button class="btn btn-success" onclick="generateReadable()">Generate Readable Version</button>
+                <div id="readable-content" class="paper-content" style="display: none;"></div>
+            </div>
+
+            <div id="qa-tab" class="tab-content">
+                <h4>Q&A</h4>
+                <div id="qa-history" class="qa-history" style="display: none;"></div>
+                <textarea id="qa-input" class="qa-input" placeholder="Ask a question about the paper..."></textarea>
+                <button class="btn btn-success" onclick="askQuestion()">Ask Question</button>
+            </div>
+
+            <div id="original-tab" class="tab-content">
+                <h4>Original Paper Content</h4>
+                <div id="original-content" class="paper-content"></div>
+            </div>
+        </div>
+
+        <div id="loading" class="content-area loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading paper content...</p>
+        </div>
+
+        <div id="error-container"></div>
+    </div>
+
+    <!-- JavaScript Module Imports -->
+    <script type="module" src="js/index.js"></script>
+</body>
+
+</html>
