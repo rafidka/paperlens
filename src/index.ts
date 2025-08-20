@@ -1,6 +1,6 @@
 // Main application logic for PaperLens
 import { loadPaper, extractArxivId } from "./paper.js";
-import { getSelectedProvider, callLLM, READABILITY_PROMPT } from "./llm.js";
+import { getSelectedProvider, callLLM } from "./llm.js";
 import { cachePaper } from "./cache.js";
 import {
   showError,
@@ -58,6 +58,28 @@ You are an expert at answering questions about academic papers. Provide accurate
 based on the paper content. If the information is not in the paper, clearly state that.
 `.trim();
 
+export const READABILITY_PROMPT = `
+You are an AI readability editor preparing technical prose for high-quality text-to-speech narration.
+
+**Goals**
+• Preserve every fact, definition, symbol, and equation exactly.
+• Make only SMALL edits that improve oral flow and comprehension.
+• Never add personal commentary or new content.
+
+**Edit Rules**
+1. Convert inline math symbols to spoken words ("∀" → "for all", "≈" → "approximately").
+2. For equations, try to summarize them since listening to symbols being read out is not quite easy to follow.
+3. Replace citation brackets like "[12]" with "(reference 12)" or remove them if they disrupt flow.
+4. For each displayed equation:
+   • Prepend "Equation (n):" (use the existing number if present, otherwise number sequentially).
+   • Append a ≤20-word plain-English gloss unless the sentence right after already explains it.
+5. Keep section headings, figure captions, table captions, and bullet lists verbatim.
+6. Do **not** alter variable names, numeric values, or claim meanings.
+7. Output only the revised text—no explanations, markdown, or extra headings.
+`.trim();
+
+const MAX_PAPER_LENGTH = 256_000; // current models support bigger windows, but staying safe.
+
 // AI Generation Functions
 async function generateSummary(): Promise<void> {
   if (!currentPaper) {
@@ -89,7 +111,7 @@ async function generateSummary(): Promise<void> {
 Title: ${currentPaper.title}
 
 Content:
-${currentPaper.content.substring(0, 15000)}`,
+${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
       },
     ];
 
@@ -141,7 +163,7 @@ async function extractConcepts(): Promise<void> {
         role: "user",
         content: `Please extract and explain the key concepts from this academic paper:\n\nTitle: ${
           currentPaper.title
-        }\n\nContent:\n${currentPaper.content.substring(0, 15000)}`,
+        }\n\nContent:\n${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
       },
     ];
 
@@ -193,7 +215,7 @@ async function generateReadable(): Promise<void> {
         role: "user",
         content: `Please edit this academic paper for text-to-speech narration:\n\n${currentPaper.content.substring(
           0,
-          15000
+          MAX_PAPER_LENGTH
         )}`,
       },
     ];
@@ -259,7 +281,7 @@ async function askQuestion(): Promise<void> {
 Paper Title: ${currentPaper.title}
 
 Paper Content:
-${currentPaper.content.substring(0, 15000)}
+${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}
 
 Question: ${question}`,
       },
@@ -314,7 +336,7 @@ function handleLoadCachedPaper(arxivId: string): void {
 function initializeApp(): void {
   // Initialize setup section
   initializeSetup();
-  
+
   // Make functions globally available for onclick handlers
   (window as any).showTab = showTab;
   (window as any).generateSummary = generateSummary;
