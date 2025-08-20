@@ -58,7 +58,7 @@ You are an expert at answering questions about academic papers. Provide accurate
 based on the paper content. If the information is not in the paper, clearly state that.
 `.trim();
 
-export const READABILITY_PROMPT = `
+const READABILITY_PROMPT = `
 You are an AI readability editor preparing technical prose for high-quality text-to-speech narration.
 
 **Goals**
