@@ -9,15 +9,40 @@ let qaHistory = [];
 const GENERATE_SUMMARY_PROMPT = `
 You are an expert at summarizing academic papers. Provide a clear, comprehensive summary that covers
 the main contributions, methodology, and findings.
+
+Format your response in markdown with:
+- Clear section headings (## Main Contributions, ## Methodology, ## Key Findings, etc.)
+- Bullet points for lists
+- **Bold** for key terms and concepts
+- *Italics* for emphasis where appropriate
+
+Provide a well-structured, readable summary.
 `.trim();
 const EXTRACT_CONCEPTS_PROMPT = `
 You are an expert at extracting key concepts from academic papers. Identify and explain the most
-important concepts, terms, methods, and ideas presented in the paper. Format your response as a
-clear list with explanations.
+important concepts, terms, methods, and ideas presented in the paper.
+
+Format your response in markdown with:
+- ## Key Concepts as a main heading
+- **Concept Name**: Clear explanation for each concept
+- Use bullet points for lists of related ideas
+- *Italics* for technical terms
+- \`code formatting\` for algorithms, formulas, or specific notation
+
+Provide a well-organized, easy-to-scan list of concepts.
 `.trim();
 const ANSWER_QUESTION_PROMPT = `
 You are an expert at answering questions about academic papers. Provide accurate, detailed answers
 based on the paper content. If the information is not in the paper, clearly state that.
+
+Format your response in markdown with:
+- Clear structure using headings if needed
+- **Bold** for key points and important information
+- Bullet points for lists
+- *Italics* for emphasis
+- \`code formatting\` for technical terms, equations, or specific values
+
+Provide clear, well-formatted answers.
 `.trim();
 const READABILITY_PROMPT = `
 You are an AI readability editor preparing technical prose for high-quality text-to-speech narration.
@@ -39,6 +64,11 @@ You are an AI readability editor preparing technical prose for high-quality text
 7. Output only the revised text—no explanations, markdown, or extra headings.
 `.trim();
 const MAX_PAPER_LENGTH = 256000; // current models support bigger windows, but staying safe.
+// Helper function to render markdown
+function renderMarkdown(content) {
+    // @ts-ignore - marked is loaded via CDN
+    return marked.parse(content);
+}
 // AI Generation Functions
 async function generateSummary() {
     if (!currentPaper) {
@@ -74,7 +104,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
         currentPaper.summary = summary;
         const summaryContent = document.getElementById("summary-content");
         if (summaryContent) {
-            summaryContent.textContent = summary;
+            summaryContent.innerHTML = renderMarkdown(summary);
             summaryContent.style.display = "block";
         }
         // Update cache
@@ -119,7 +149,7 @@ async function extractConcepts() {
         currentPaper.concepts = concepts;
         const conceptsContent = document.getElementById("concepts-content");
         if (conceptsContent) {
-            conceptsContent.textContent = concepts;
+            conceptsContent.innerHTML = renderMarkdown(concepts);
             conceptsContent.style.display = "block";
         }
         // Update cache

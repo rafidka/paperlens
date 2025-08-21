@@ -134,7 +134,7 @@ export function loadFromCache(
   if (cached.summary) {
     const summaryContent = document.getElementById("summary-content");
     if (summaryContent) {
-      summaryContent.textContent = cached.summary;
+      summaryContent.innerHTML = renderMarkdown(cached.summary);
       summaryContent.style.display = "block";
     }
   }
@@ -142,7 +142,7 @@ export function loadFromCache(
   if (cached.concepts) {
     const conceptsContent = document.getElementById("concepts-content");
     if (conceptsContent) {
-      conceptsContent.textContent = cached.concepts;
+      conceptsContent.innerHTML = renderMarkdown(cached.concepts);
       conceptsContent.style.display = "block";
     }
   }
@@ -150,7 +150,7 @@ export function loadFromCache(
   if (cached.readable) {
     const readableContent = document.getElementById("readable-content");
     if (readableContent) {
-      readableContent.textContent = cached.readable;
+      readableContent.innerHTML = renderMarkdown(cached.readable);
       readableContent.style.display = "block";
     }
   }
@@ -171,6 +171,12 @@ export function loadFromCache(
   return { currentPaper, qaHistory };
 }
 
+// Helper function to render markdown
+function renderMarkdown(content: string): string {
+  // @ts-ignore - marked is loaded via CDN
+  return marked.parse(content);
+}
+
 export function updateQAHistory(qaHistory: QAItem[]): void {
   const historyDiv = document.getElementById("qa-history");
   if (!historyDiv) return;
@@ -186,7 +192,7 @@ export function updateQAHistory(qaHistory: QAItem[]): void {
       (item) => `
         <div class="qa-item">
             <div class="qa-question">Q: ${item.question}</div>
-            <div class="qa-answer">A: ${item.answer}</div>
+            <div class="qa-answer">A: ${renderMarkdown(item.answer)}</div>
         </div>
     `
     )

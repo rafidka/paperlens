@@ -195,7 +195,90 @@ body {
     border: 1px solid #e9ecef;
     font-size: 14px;
     line-height: 1.5;
-    white-space: pre-wrap;
+}
+
+/* Markdown styling within paper content */
+.paper-content h1,
+.paper-content h2,
+.paper-content h3,
+.paper-content h4,
+.paper-content h5,
+.paper-content h6 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.paper-content h1 {
+    font-size: 1.5em;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+}
+
+.paper-content h2 {
+    font-size: 1.3em;
+    border-bottom: 1px solid #bdc3c7;
+    padding-bottom: 3px;
+}
+
+.paper-content h3 {
+    font-size: 1.1em;
+}
+
+.paper-content ul,
+.paper-content ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.paper-content li {
+    margin-bottom: 5px;
+}
+
+.paper-content p {
+    margin-bottom: 10px;
+}
+
+.paper-content strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.paper-content em {
+    color: #34495e;
+}
+
+.paper-content code {
+    background: #ecf0f1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 0.9em;
+    color: #e74c3c;
+}
+
+.paper-content pre {
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+.paper-content pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+}
+
+.paper-content blockquote {
+    border-left: 4px solid #3498db;
+    margin: 10px 0;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    font-style: italic;
 }
 
 /* Q&A section */
@@ -240,6 +323,61 @@ body {
 .qa-answer {
     color: #555;
     line-height: 1.5;
+}
+
+/* Markdown styling within Q&A answers */
+.qa-answer h1,
+.qa-answer h2,
+.qa-answer h3,
+.qa-answer h4,
+.qa-answer h5,
+.qa-answer h6 {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.qa-answer h2 {
+    font-size: 1.2em;
+    border-bottom: 1px solid #bdc3c7;
+    padding-bottom: 2px;
+}
+
+.qa-answer h3 {
+    font-size: 1.1em;
+}
+
+.qa-answer ul,
+.qa-answer ol {
+    margin: 8px 0;
+    padding-left: 18px;
+}
+
+.qa-answer li {
+    margin-bottom: 3px;
+}
+
+.qa-answer p {
+    margin-bottom: 8px;
+}
+
+.qa-answer strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.qa-answer em {
+    color: #34495e;
+}
+
+.qa-answer code {
+    background: #ecf0f1;
+    padding: 1px 3px;
+    border-radius: 2px;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 0.9em;
+    color: #e74c3c;
 }
 
 /* Responsive design */

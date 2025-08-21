@@ -96,21 +96,21 @@ export function loadFromCache(cached, callback) {
     if (cached.summary) {
         const summaryContent = document.getElementById("summary-content");
         if (summaryContent) {
-            summaryContent.textContent = cached.summary;
+            summaryContent.innerHTML = renderMarkdown(cached.summary);
             summaryContent.style.display = "block";
         }
     }
     if (cached.concepts) {
         const conceptsContent = document.getElementById("concepts-content");
         if (conceptsContent) {
-            conceptsContent.textContent = cached.concepts;
+            conceptsContent.innerHTML = renderMarkdown(cached.concepts);
             conceptsContent.style.display = "block";
         }
     }
     if (cached.readable) {
         const readableContent = document.getElementById("readable-content");
         if (readableContent) {
-            readableContent.textContent = cached.readable;
+            readableContent.innerHTML = renderMarkdown(cached.readable);
             readableContent.style.display = "block";
         }
     }
@@ -126,6 +126,11 @@ export function loadFromCache(cached, callback) {
     }
     return { currentPaper, qaHistory };
 }
+// Helper function to render markdown
+function renderMarkdown(content) {
+    // @ts-ignore - marked is loaded via CDN
+    return marked.parse(content);
+}
 export function updateQAHistory(qaHistory) {
     const historyDiv = document.getElementById("qa-history");
     if (!historyDiv)
@@ -139,7 +144,7 @@ export function updateQAHistory(qaHistory) {
         .map((item) => `
         <div class="qa-item">
             <div class="qa-question">Q: ${item.question}</div>
-            <div class="qa-answer">A: ${item.answer}</div>
+            <div class="qa-answer">A: ${renderMarkdown(item.answer)}</div>
         </div>
     `)
         .join("");
