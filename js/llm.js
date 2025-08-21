@@ -1,5 +1,6 @@
 // LLM provider integrations for PaperLens
 import { getActiveProvider } from "./cache.js";
+import Anthropic from '@anthropic-ai/sdk';
 // Model constants
 const OPENAI_MODEL = "gpt-5";
 const ANTHROPIC_MODEL = "claude-opus-4-1-20250805";
@@ -31,29 +32,22 @@ async function callOpenAI(messages, apiKey) {
     return data.choices[0].message.content;
 }
 async function callAnthropic(messages, apiKey) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-            model: ANTHROPIC_MODEL,
-            messages: messages
-                .filter((m) => m.role !== "system")
-                .map((m) => ({
-                role: m.role === "assistant" ? "assistant" : "user",
-                content: m.content,
-            })),
-            system: messages.find((m) => m.role === "system")?.content || "",
-        }),
+    const anthropic = new Anthropic({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
     });
-    if (!response.ok) {
-        throw new Error(`Anthropic API error: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.content[0].text;
+    const systemMessage = messages.find((m) => m.role === "system");
+    const userMessages = messages.filter((m) => m.role !== "system");
+    const response = await anthropic.messages.create({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 4096,
+        messages: userMessages.map((m) => ({
+            role: m.role === "assistant" ? "assistant" : "user",
+            content: m.content,
+        })),
+        system: systemMessage?.content || "",
+    });
+    return response.content[0].type === "text" ? response.content[0].text : "";
 }
 async function callCohere(messages, apiKey) {
     // Convert messages to Cohere format
@@ -134,66 +128,35 @@ async function callOpenAIStreaming(messages, apiKey, callback) {
     }
 }
 async function callAnthropicStreaming(messages, apiKey, callback) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
+    const anthropic = new Anthropic({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
+    });
+    const systemMessage = messages.find((m) => m.role === "system");
+    const userMessages = messages.filter((m) => m.role !== "system");
+    try {
+        const stream = await anthropic.messages.create({
             model: ANTHROPIC_MODEL,
-            messages: messages
-                .filter((m) => m.role !== "system")
-                .map((m) => ({
+            max_tokens: 4096,
+            messages: userMessages.map((m) => ({
                 role: m.role === "assistant" ? "assistant" : "user",
                 content: m.content,
             })),
-            system: messages.find((m) => m.role === "system")?.content || "",
+            system: systemMessage?.content || "",
             stream: true,
-        }),
-    });
-    if (!response.ok) {
-        callback.onError(new Error(`Anthropic API error: ${response.status}`));
-        return;
-    }
-    const reader = response.body?.getReader();
-    if (!reader) {
-        callback.onError(new Error("Failed to get response reader"));
-        return;
-    }
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done)
-                break;
-            const chunk = new TextDecoder().decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    try {
-                        const parsed = JSON.parse(data);
-                        if (parsed.type === 'content_block_delta') {
-                            const content = parsed.delta?.text;
-                            if (content) {
-                                callback.onToken(content);
-                            }
-                        }
-                        else if (parsed.type === 'message_stop') {
-                            callback.onComplete();
-                            return;
-                        }
-                    }
-                    catch (e) {
-                        // Skip invalid JSON lines
-                    }
-                }
+        });
+        for await (const event of stream) {
+            if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+                callback.onToken(event.delta.text);
+            }
+            else if (event.type === 'message_stop') {
+                callback.onComplete();
+                return;
             }
         }
     }
     catch (error) {
-        callback.onError(error instanceof Error ? error : new Error("Stream error"));
+        callback.onError(error instanceof Error ? error : new Error("Anthropic streaming error"));
     }
 }
 async function callCohereStreaming(messages, apiKey, callback) {

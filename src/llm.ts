@@ -1,5 +1,6 @@
 // LLM provider integrations for PaperLens
 import { getActiveProvider } from "./cache.js";
+import Anthropic from '@anthropic-ai/sdk';
 
 // Model constants
 const OPENAI_MODEL = "gpt-5";
@@ -55,31 +56,25 @@ async function callOpenAI(messages: ChatMessage[], apiKey: string): Promise<stri
 }
 
 async function callAnthropic(messages: ChatMessage[], apiKey: string): Promise<string> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      messages: messages
-        .filter((m) => m.role !== "system")
-        .map((m) => ({
-          role: m.role === "assistant" ? "assistant" : "user",
-          content: m.content,
-        })),
-      system: messages.find((m) => m.role === "system")?.content || "",
-    }),
+  const anthropic = new Anthropic({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true,
   });
 
-  if (!response.ok) {
-    throw new Error(`Anthropic API error: ${response.status}`);
-  }
+  const systemMessage = messages.find((m) => m.role === "system");
+  const userMessages = messages.filter((m) => m.role !== "system");
 
-  const data = await response.json();
-  return data.content[0].text;
+  const response = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 4096,
+    messages: userMessages.map((m) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+    })),
+    system: systemMessage?.content || "",
+  });
+
+  return response.content[0].type === "text" ? response.content[0].text : "";
 }
 
 async function callCohere(messages: ChatMessage[], apiKey: string): Promise<string> {
@@ -169,68 +164,36 @@ async function callOpenAIStreaming(messages: ChatMessage[], apiKey: string, call
 }
 
 async function callAnthropicStreaming(messages: ChatMessage[], apiKey: string, callback: StreamCallback): Promise<void> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      messages: messages
-        .filter((m) => m.role !== "system")
-        .map((m) => ({
-          role: m.role === "assistant" ? "assistant" : "user",
-          content: m.content,
-        })),
-      system: messages.find((m) => m.role === "system")?.content || "",
-      stream: true,
-    }),
+  const anthropic = new Anthropic({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true,
   });
 
-  if (!response.ok) {
-    callback.onError(new Error(`Anthropic API error: ${response.status}`));
-    return;
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) {
-    callback.onError(new Error("Failed to get response reader"));
-    return;
-  }
+  const systemMessage = messages.find((m) => m.role === "system");
+  const userMessages = messages.filter((m) => m.role !== "system");
 
   try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    const stream = await anthropic.messages.create({
+      model: ANTHROPIC_MODEL,
+      max_tokens: 4096,
+      messages: userMessages.map((m) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: m.content,
+      })),
+      system: systemMessage?.content || "",
+      stream: true,
+    });
 
-      const chunk = new TextDecoder().decode(value);
-      const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.type === 'content_block_delta') {
-              const content = parsed.delta?.text;
-              if (content) {
-                callback.onToken(content);
-              }
-            } else if (parsed.type === 'message_stop') {
-              callback.onComplete();
-              return;
-            }
-          } catch (e) {
-            // Skip invalid JSON lines
-          }
-        }
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        callback.onToken(event.delta.text);
+      } else if (event.type === 'message_stop') {
+        callback.onComplete();
+        return;
       }
     }
   } catch (error) {
-    callback.onError(error instanceof Error ? error : new Error("Stream error"));
+    callback.onError(error instanceof Error ? error : new Error("Anthropic streaming error"));
   }
 }
 

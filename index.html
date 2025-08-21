@@ -12,6 +12,13 @@
     
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "@anthropic-ai/sdk": "https://esm.sh/@anthropic-ai/sdk"
+        }
+    }
+    </script>
 </head>
 
 <body>
@@ -48,7 +55,7 @@
                             <span class="checkmark"></span>
                             Enable Streaming (real-time responses)
                         </label>
-                        <small class="streaming-note">Note: OpenAI streaming requires verified organization</small>
+                        <small class="streaming-note">Note: OpenAI streaming requires verified organization. Anthropic now works in browser!</small>
                     </div>
                     <div id="saved-keys" class="saved-keys"></div>
                 </div>
