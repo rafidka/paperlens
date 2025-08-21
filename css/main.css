@@ -46,6 +46,35 @@ body {
     margin-bottom: 20px;
 }
 
+/* Streaming indicator */
+.streaming-indicator {
+    color: #3498db;
+    font-style: italic;
+    padding: 15px;
+    background: #ecf0f1;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    animation: pulse 1.5s infinite;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.streaming-indicator::before {
+    content: "✨";
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Form elements */
 .api-keys {
     display: grid;

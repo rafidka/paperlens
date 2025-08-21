@@ -42,6 +42,14 @@
                         <input type="password" id="api-key-input" placeholder="Enter your API key">
                         <button class="btn btn-small btn-primary" onclick="saveApiKey()">Save</button>
                     </div>
+                    <div class="streaming-config">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="streaming-enabled" onchange="toggleStreaming()">
+                            <span class="checkmark"></span>
+                            Enable Streaming (real-time responses)
+                        </label>
+                        <small class="streaming-note">Note: OpenAI streaming requires verified organization</small>
+                    </div>
                     <div id="saved-keys" class="saved-keys"></div>
                 </div>
             </div>

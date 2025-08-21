@@ -69,3 +69,12 @@ export function clearActiveProvider() {
 export function hasActiveProvider() {
     return getActiveProvider() !== null;
 }
+// Streaming preference
+const STREAMING_KEY = 'paperlens_streaming_enabled';
+export function getStreamingEnabled() {
+    const stored = localStorage.getItem(STREAMING_KEY);
+    return stored === 'true'; // Default to false
+}
+export function setStreamingEnabled(enabled) {
+    localStorage.setItem(STREAMING_KEY, enabled.toString());
+}

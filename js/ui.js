@@ -1,5 +1,5 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, hasActiveProvider } from "./cache.js";
+import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, hasActiveProvider, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
 export function showError(message) {
     const container = document.getElementById("error-container");
     if (container) {
@@ -343,4 +343,18 @@ function updateActiveProviderDisplay() {
       <button class="btn btn-small btn-danger" onclick="clearActiveProviderFromUI()">Change</button>
     </div>
   `;
+}
+// Streaming configuration functions
+export function initializeStreaming() {
+    const streamingCheckbox = document.getElementById("streaming-enabled");
+    if (streamingCheckbox) {
+        streamingCheckbox.checked = getStreamingEnabled();
+    }
+}
+export function toggleStreaming() {
+    const streamingCheckbox = document.getElementById("streaming-enabled");
+    if (streamingCheckbox) {
+        setStreamingEnabled(streamingCheckbox.checked);
+        showSuccess(streamingCheckbox.checked ? "Streaming enabled" : "Streaming disabled");
+    }
 }

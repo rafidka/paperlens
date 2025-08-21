@@ -1,8 +1,8 @@
 // Main application logic for PaperLens
 import { loadPaper, extractArxivId } from "./paper.js";
-import { getSelectedProvider, callLLM } from "./llm.js";
-import { cachePaper } from "./cache.js";
-import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, } from "./ui.js";
+import { getSelectedProvider, callLLM, callLLMStreaming } from "./llm.js";
+import { cachePaper, getStreamingEnabled } from "./cache.js";
+import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, initializeStreaming, toggleStreaming, } from "./ui.js";
 // Global state
 let currentPaper = null;
 let qaHistory = [];
@@ -100,21 +100,52 @@ Content:
 ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
             },
         ];
-        const summary = await callLLM(messages, llmConfig.provider, llmConfig.key);
-        currentPaper.summary = summary;
         const summaryContent = document.getElementById("summary-content");
-        if (summaryContent) {
-            summaryContent.innerHTML = renderMarkdown(summary);
-            summaryContent.style.display = "block";
+        const isStreamingEnabled = getStreamingEnabled();
+        if (isStreamingEnabled) {
+            // Streaming mode
+            if (summaryContent) {
+                summaryContent.style.display = "block";
+                summaryContent.innerHTML = "<div class='streaming-indicator'>✨ Generating summary...</div>";
+            }
+            let accumulatedContent = "";
+            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+                onToken: (token) => {
+                    accumulatedContent += token;
+                    if (summaryContent) {
+                        summaryContent.innerHTML = renderMarkdown(accumulatedContent);
+                    }
+                },
+                onComplete: () => {
+                    currentPaper.summary = accumulatedContent;
+                    cachePaper(currentPaper, currentPaper, qaHistory);
+                    button.disabled = false;
+                    button.textContent = "Generate Summary";
+                },
+                onError: (error) => {
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                    showError(`Error generating summary: ${errorMessage}`);
+                    button.disabled = false;
+                    button.textContent = "Generate Summary";
+                }
+            });
         }
-        // Update cache
-        cachePaper(currentPaper, currentPaper, qaHistory);
+        else {
+            // Regular mode
+            const summary = await callLLM(messages, llmConfig.provider, llmConfig.key);
+            currentPaper.summary = summary;
+            if (summaryContent) {
+                summaryContent.innerHTML = renderMarkdown(summary);
+                summaryContent.style.display = "block";
+            }
+            cachePaper(currentPaper, currentPaper, qaHistory);
+            button.disabled = false;
+            button.textContent = "Generate Summary";
+        }
     }
     catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         showError(`Error generating summary: ${errorMessage}`);
-    }
-    finally {
         button.disabled = false;
         button.textContent = "Generate Summary";
     }
@@ -145,21 +176,52 @@ async function extractConcepts() {
                 content: `Please extract and explain the key concepts from this academic paper:\n\nTitle: ${currentPaper.title}\n\nContent:\n${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
             },
         ];
-        const concepts = await callLLM(messages, llmConfig.provider, llmConfig.key);
-        currentPaper.concepts = concepts;
         const conceptsContent = document.getElementById("concepts-content");
-        if (conceptsContent) {
-            conceptsContent.innerHTML = renderMarkdown(concepts);
-            conceptsContent.style.display = "block";
+        const isStreamingEnabled = getStreamingEnabled();
+        if (isStreamingEnabled) {
+            // Streaming mode
+            if (conceptsContent) {
+                conceptsContent.style.display = "block";
+                conceptsContent.innerHTML = "<div class='streaming-indicator'>✨ Extracting concepts...</div>";
+            }
+            let accumulatedContent = "";
+            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+                onToken: (token) => {
+                    accumulatedContent += token;
+                    if (conceptsContent) {
+                        conceptsContent.innerHTML = renderMarkdown(accumulatedContent);
+                    }
+                },
+                onComplete: () => {
+                    currentPaper.concepts = accumulatedContent;
+                    cachePaper(currentPaper, currentPaper, qaHistory);
+                    button.disabled = false;
+                    button.textContent = "Extract Key Concepts";
+                },
+                onError: (error) => {
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                    showError(`Error extracting concepts: ${errorMessage}`);
+                    button.disabled = false;
+                    button.textContent = "Extract Key Concepts";
+                }
+            });
         }
-        // Update cache
-        cachePaper(currentPaper, currentPaper, qaHistory);
+        else {
+            // Regular mode
+            const concepts = await callLLM(messages, llmConfig.provider, llmConfig.key);
+            currentPaper.concepts = concepts;
+            if (conceptsContent) {
+                conceptsContent.innerHTML = renderMarkdown(concepts);
+                conceptsContent.style.display = "block";
+            }
+            cachePaper(currentPaper, currentPaper, qaHistory);
+            button.disabled = false;
+            button.textContent = "Extract Key Concepts";
+        }
     }
     catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         showError(`Error extracting concepts: ${errorMessage}`);
-    }
-    finally {
         button.disabled = false;
         button.textContent = "Extract Key Concepts";
     }
@@ -250,20 +312,55 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}
 Question: ${question}`,
             },
         ];
-        const answer = await callLLM(messages, llmConfig.provider, llmConfig.key);
-        qaHistory.push({ question, answer });
-        updateQAHistory(qaHistory);
-        // Update cache with new Q&A
-        if (currentPaper) {
-            cachePaper(currentPaper, currentPaper, qaHistory);
+        const isStreamingEnabled = getStreamingEnabled();
+        if (isStreamingEnabled) {
+            // Streaming mode
+            qaHistory.push({ question, answer: "✨ Thinking..." });
+            updateQAHistory(qaHistory);
+            questionInput.value = "";
+            let accumulatedAnswer = "";
+            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+                onToken: (token) => {
+                    accumulatedAnswer += token;
+                    qaHistory[qaHistory.length - 1].answer = accumulatedAnswer;
+                    updateQAHistory(qaHistory);
+                },
+                onComplete: () => {
+                    if (currentPaper) {
+                        cachePaper(currentPaper, currentPaper, qaHistory);
+                    }
+                    button.disabled = false;
+                    button.textContent = "Ask Question";
+                },
+                onError: (error) => {
+                    qaHistory.pop();
+                    updateQAHistory(qaHistory);
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                    showError(`Error getting answer: ${errorMessage}`);
+                    button.disabled = false;
+                    button.textContent = "Ask Question";
+                }
+            });
         }
-        questionInput.value = "";
+        else {
+            // Regular mode
+            const answer = await callLLM(messages, llmConfig.provider, llmConfig.key);
+            qaHistory.push({ question, answer });
+            updateQAHistory(qaHistory);
+            if (currentPaper) {
+                cachePaper(currentPaper, currentPaper, qaHistory);
+            }
+            questionInput.value = "";
+            button.disabled = false;
+            button.textContent = "Ask Question";
+        }
     }
     catch (error) {
+        // Remove the failed question from history
+        qaHistory.pop();
+        updateQAHistory(qaHistory);
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         showError(`Error getting answer: ${errorMessage}`);
-    }
-    finally {
         button.disabled = false;
         button.textContent = "Ask Question";
     }
@@ -293,6 +390,7 @@ function handleLoadCachedPaper(arxivId) {
 function initializeApp() {
     // Initialize setup section
     initializeSetup();
+    initializeStreaming();
     // Make functions globally available for onclick handlers
     window.showTab = showTab;
     window.generateSummary = generateSummary;
@@ -309,6 +407,7 @@ function initializeApp() {
     window.updateProviderUI = updateProviderUI;
     window.saveApiKey = saveApiKeyFromUI;
     window.clearActiveProviderFromUI = clearActiveProviderFromUI;
+    window.toggleStreaming = toggleStreaming;
     // Event listeners
     const qaInput = document.getElementById("qa-input");
     qaInput?.addEventListener("keydown", function (e) {
