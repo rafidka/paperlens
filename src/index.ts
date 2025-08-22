@@ -22,6 +22,10 @@ import {
   removeApiKeyFromUI,
   initializeStreaming,
   toggleStreaming,
+  openSetupModal,
+  closeSetupModal,
+  openLibraryPanel,
+  closeLibraryPanel,
 } from "./ui.js";
 
 interface PaperData {
@@ -496,6 +500,10 @@ function initializeApp(): void {
   (window as any).setActiveProviderFromUI = setActiveProviderFromUI;
   (window as any).removeApiKeyFromUI = removeApiKeyFromUI;
   (window as any).toggleStreaming = toggleStreaming;
+  (window as any).openSetupModal = openSetupModal;
+  (window as any).closeSetupModal = closeSetupModal;
+  (window as any).openLibraryPanel = openLibraryPanel;
+  (window as any).closeLibraryPanel = closeLibraryPanel;
 
   // Event listeners
   const qaInput = document.getElementById("qa-input");
@@ -523,6 +531,14 @@ function initializeApp(): void {
 
   // Initialize cache status
   updateCacheStatus(null);
+  
+  // Click outside modal to close
+  const setupModal = document.getElementById("setup-modal");
+  setupModal?.addEventListener("click", function(e: MouseEvent) {
+    if (e.target === setupModal) {
+      closeSetupModal();
+    }
+  });
 }
 
 // Start the application when DOM is loaded

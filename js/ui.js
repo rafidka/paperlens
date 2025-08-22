@@ -176,14 +176,12 @@ export function showLibrary() {
     const grid = document.getElementById("library-grid");
     if (!container || !grid)
         return;
-    if (container.style.display === "block") {
-        container.style.display = "none";
-        return;
-    }
+    // Ensure the container is always visible in the new slide panel layout
+    container.style.display = "block";
     const library = getLibrary();
     if (library.length === 0) {
         grid.innerHTML =
-            '<p style="grid-column: 1/-1; text-align: center; color: #7f8c8d; padding: 20px;">No cached papers found</p>';
+            '<div class="library-empty">No papers cached yet.<br>Load a paper to get started!</div>';
     }
     else {
         grid.innerHTML = library
@@ -192,32 +190,32 @@ export function showLibrary() {
             const cached = getCachedPaper(paper.id);
             const badges = [];
             if (cached?.summary)
-                badges.push("Sum");
+                badges.push("Summary");
             if (cached?.concepts)
-                badges.push("Con");
+                badges.push("Concepts");
             if (cached?.readable)
-                badges.push("Read");
+                badges.push("Readable");
             if (cached?.qaHistory?.length && cached.qaHistory.length > 0) {
-                badges.push(`Q&A(${cached.qaHistory.length})`);
+                badges.push(`Q&A (${cached.qaHistory.length})`);
             }
             return `
                     <div class="library-item cached" onclick="loadCachedPaper('${paper.id}')">
                         <div class="library-title">${paper.title}</div>
-                        <div class="library-id">ID: ${paper.id}</div>
+                        <div class="library-id">arxiv:${paper.id}</div>
                         <div class="library-meta">
+                            <span>${new Date(paper.lastAccessed).toLocaleDateString()}</span>
                             <div class="cache-badges">
                                 ${badges
                 .map((badge) => `<span class="cache-badge">${badge}</span>`)
                 .join("")}
+                                <button class="delete-btn" onclick="event.stopPropagation(); deletePaper('${paper.id}');">Delete</button>
                             </div>
-                            <button class="delete-btn" onclick="event.stopPropagation(); deletePaper('${paper.id}');">Delete</button>
                         </div>
                     </div>
                 `;
         })
             .join("");
     }
-    container.style.display = "block";
 }
 export function loadCachedPaper(arxivId, updateStateCallback) {
     const arxivInput = document.getElementById("arxiv-url");
@@ -226,9 +224,7 @@ export function loadCachedPaper(arxivId, updateStateCallback) {
     const cached = getCachedPaper(arxivId);
     if (cached) {
         loadFromCache(cached, updateStateCallback);
-        const libraryContainer = document.getElementById("library-container");
-        if (libraryContainer)
-            libraryContainer.style.display = "none";
+        // Note: We no longer hide the library since it's now in a dedicated panel
     }
 }
 export function deletePaper(arxivId) {
@@ -241,22 +237,18 @@ export function deletePaper(arxivId) {
 export function clearCache() {
     if (confirm("Clear all cached papers? This cannot be undone.")) {
         clearAllCache();
-        const libraryContainer = document.getElementById("library-container");
-        if (libraryContainer)
-            libraryContainer.style.display = "none";
-        showSuccess("Cache cleared successfully");
+        showLibrary(); // Refresh the library view to show empty state
+        showSuccess("All papers cleared from cache");
     }
 }
 export function clearAll() {
     const arxivInput = document.getElementById("arxiv-url");
     const paperSection = document.getElementById("paper-section");
-    const libraryContainer = document.getElementById("library-container");
     if (arxivInput)
         arxivInput.value = "";
     if (paperSection)
         paperSection.style.display = "none";
-    if (libraryContainer)
-        libraryContainer.style.display = "none";
+    // Note: We no longer hide libraryContainer since it's now in a dedicated panel
     resetGeneratedContent();
     updateCacheStatus(null);
     showSuccess("All content cleared");
@@ -411,5 +403,40 @@ export function toggleStreaming() {
     if (streamingCheckbox) {
         setStreamingEnabled(streamingCheckbox.checked);
         showSuccess(streamingCheckbox.checked ? "Streaming enabled" : "Streaming disabled");
+    }
+}
+// Modal and Panel Functions
+export function openSetupModal() {
+    const modal = document.getElementById("setup-modal");
+    if (modal) {
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+    }
+}
+export function closeSetupModal() {
+    const modal = document.getElementById("setup-modal");
+    if (modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+    }
+}
+export function openLibraryPanel() {
+    const panel = document.getElementById("library-panel");
+    if (panel) {
+        panel.style.display = "block";
+        setTimeout(() => {
+            panel.classList.add("open");
+        }, 10);
+        // Auto-show the library content when panel opens
+        showLibrary();
+    }
+}
+export function closeLibraryPanel() {
+    const panel = document.getElementById("library-panel");
+    if (panel) {
+        panel.classList.remove("open");
+        setTimeout(() => {
+            panel.style.display = "none";
+        }, 300);
     }
 }

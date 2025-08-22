@@ -26,80 +26,32 @@
 <body>
     <div id="notification-container"></div>
     <div class="container">
-        <div class="header">
-            <h1>🔬 PaperLens</h1>
-            <p>AI-Powered Arxiv Paper Reader with Summary, Q&A, and Readability Enhancement</p>
-            <div class="feedback-link">
-                💡 <a href="https://github.com/rafidka/paperlens/issues" target="_blank" rel="noopener noreferrer">
-                    Have a feature idea or found a bug? Click here to let us know!
-                </a>
-            </div>
-        </div>
-
-        <div class="setup-panel">
-            <div class="setup-header" onclick="toggleSetup()">
-                <h3>⚙️ Setup</h3>
-                <span id="setup-toggle" class="setup-toggle">▼</span>
-            </div>
-            <div id="setup-content" class="setup-content">
-                <div class="api-config">
-                    <div class="api-key-group">
-                        <label for="provider-select">AI Provider:</label>
-                        <select id="provider-select" onchange="updateProviderUI()">
-                            <option value="">Select Provider</option>
-                            <option value="openai">OpenAI</option>
-                            <option value="anthropic">Anthropic</option>
-                            <option value="cohere">Cohere</option>
-                        </select>
+        <!-- Compact Header -->
+        <div class="compact-header">
+            <div class="header-content">
+                <h1>🔬 PaperLens</h1>
+                <div class="header-actions">
+                    <div class="feedback-link">
+                        💡 <a href="https://github.com/rafidka/paperlens/issues" target="_blank" rel="noopener noreferrer">
+                            Feedback
+                        </a>
                     </div>
-                    <div class="api-key-group">
-                        <label for="api-key-input">API Key:</label>
-                        <input type="password" id="api-key-input" placeholder="Enter your API key">
-                        <button class="btn btn-small btn-primary" onclick="saveApiKey()">Save</button>
-                        <div class="security-warning">
-                            ⚠️ <strong>Security Notice:</strong> API keys are stored in your browser's local storage and
-                            can be viewed in developer tools. Always clear keys when using shared computers.
-                        </div>
-                    </div>
-                    <div class="streaming-config">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="streaming-enabled" onchange="toggleStreaming()">
-                            <span class="checkmark"></span>
-                            Enable Streaming (real-time responses)
-                        </label>
-                        <small class="streaming-note">Note: OpenAI streaming requires verified organization. Anthropic
-                            now works in browser!</small>
-                    </div>
-                    <div id="saved-keys" class="saved-keys"></div>
-                    <div class="key-management">
-                        <button class="btn btn-small btn-danger" onclick="clearAllKeys()">🗑️ Clear All Keys</button>
-                    </div>
+                    <button class="btn-icon" onclick="openSetupModal()" title="Settings">
+                        ⚙️
+                    </button>
+                    <button class="btn-icon" onclick="openLibraryPanel()" title="Paper Library">
+                        📚
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <div class="library-panel">
-            <h3>📚 Paper Library</h3>
-            <div class="button-group">
-                <button class="btn btn-secondary" onclick="showLibrary()">Show Cached Papers</button>
-                <button class="btn btn-secondary" onclick="clearCache()">Clear Cache</button>
-            </div>
-            <div id="library-container" style="display: none;">
-                <div id="library-grid" class="library-grid"></div>
-            </div>
-        </div>
-
-        <div class="load-paper-panel">
-            <h3>📄 Load Paper</h3>
-            <div class="paper-input">
-                <label for="arxiv-url">Arxiv Paper URL or ID:</label>
-                <input type="text" id="arxiv-url" placeholder="https://arxiv.org/abs/2301.00001 or 2301.00001">
-                <span id="cache-status" class="cache-status" style="display: none;"></span>
-            </div>
-
-            <div class="button-group">
-                <button class="btn btn-primary" onclick="loadPaper()">Load Paper</button>
-                <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+            
+            <!-- Load Paper Search Bar -->
+            <div class="search-bar">
+                <div class="search-input-group">
+                    <input type="text" id="arxiv-url" placeholder="Enter Arxiv URL or ID (e.g., 2301.00001)">
+                    <span id="cache-status" class="cache-status" style="display: none;"></span>
+                    <button class="btn btn-primary" onclick="loadPaper()">Load Paper</button>
+                </div>
             </div>
         </div>
 
@@ -149,6 +101,69 @@
             <p>Loading paper content...</p>
         </div>
 
+    </div>
+    
+    <!-- Setup Modal -->
+    <div id="setup-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Settings</h3>
+                <button class="modal-close" onclick="closeSetupModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="api-config">
+                    <div class="api-key-group">
+                        <label for="provider-select">AI Provider:</label>
+                        <select id="provider-select" onchange="updateProviderUI()">
+                            <option value="">Select Provider</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="cohere">Cohere</option>
+                        </select>
+                    </div>
+                    <div class="api-key-group">
+                        <label for="api-key-input">API Key:</label>
+                        <input type="password" id="api-key-input" placeholder="Enter your API key">
+                        <button class="btn btn-small btn-primary" onclick="saveApiKey()">Save</button>
+                        <div class="security-warning">
+                            ⚠️ <strong>Security Notice:</strong> API keys are stored in your browser's local storage and
+                            can be viewed in developer tools. Always clear keys when using shared computers.
+                        </div>
+                    </div>
+                    <div class="streaming-config">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="streaming-enabled" onchange="toggleStreaming()">
+                            <span class="checkmark"></span>
+                            Enable Streaming (real-time responses)
+                        </label>
+                        <small class="streaming-note">Note: OpenAI streaming requires verified organization. Anthropic
+                            now works in browser!</small>
+                    </div>
+                    <div id="saved-keys" class="saved-keys"></div>
+                    <div class="key-management">
+                        <button class="btn btn-small btn-danger" onclick="clearAllKeys()">🗑️ Clear All Keys</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Library Panel -->
+    <div id="library-panel" class="slide-panel" style="display: none;">
+        <div class="panel-content">
+            <div class="panel-header">
+                <h3>📚 Paper Library</h3>
+                <button class="panel-close" onclick="closeLibraryPanel()">×</button>
+            </div>
+            <div class="panel-body">
+                <div class="library-actions">
+                    <button class="btn btn-danger btn-small" onclick="clearCache()">🗑️ Clear All Papers</button>
+                </div>
+                <div id="library-container" class="library-content">
+                    <div id="library-grid" class="library-grid"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript Module Imports -->

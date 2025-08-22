@@ -2,7 +2,7 @@
 import { loadPaper, extractArxivId } from "./paper.js";
 import { getSelectedProvider, callLLM, callLLMStreaming } from "./llm.js";
 import { cachePaper, getStreamingEnabled } from "./cache.js";
-import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, clearAllKeysFromUI, setActiveProviderFromUI, removeApiKeyFromUI, initializeStreaming, toggleStreaming, } from "./ui.js";
+import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, clearAllKeysFromUI, setActiveProviderFromUI, removeApiKeyFromUI, initializeStreaming, toggleStreaming, openSetupModal, closeSetupModal, openLibraryPanel, closeLibraryPanel, } from "./ui.js";
 // Global state
 let currentPaper = null;
 let qaHistory = [];
@@ -411,6 +411,10 @@ function initializeApp() {
     window.setActiveProviderFromUI = setActiveProviderFromUI;
     window.removeApiKeyFromUI = removeApiKeyFromUI;
     window.toggleStreaming = toggleStreaming;
+    window.openSetupModal = openSetupModal;
+    window.closeSetupModal = closeSetupModal;
+    window.openLibraryPanel = openLibraryPanel;
+    window.closeLibraryPanel = closeLibraryPanel;
     // Event listeners
     const qaInput = document.getElementById("qa-input");
     qaInput?.addEventListener("keydown", function (e) {
@@ -434,6 +438,13 @@ function initializeApp() {
     });
     // Initialize cache status
     updateCacheStatus(null);
+    // Click outside modal to close
+    const setupModal = document.getElementById("setup-modal");
+    setupModal?.addEventListener("click", function (e) {
+        if (e.target === setupModal) {
+            closeSetupModal();
+        }
+    });
 }
 // Start the application when DOM is loaded
 document.addEventListener("DOMContentLoaded", initializeApp);
