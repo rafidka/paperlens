@@ -1,6 +1,8 @@
 // LLM provider integrations for PaperLens
 import { getActiveProvider } from "./cache.js";
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+import { CohereClient } from 'cohere-ai';
 // Model constants
 const OPENAI_MODEL = "gpt-5";
 const ANTHROPIC_MODEL = "claude-opus-4-1-20250805";
@@ -14,22 +16,15 @@ export function getSelectedProvider() {
 }
 // Individual provider functions
 async function callOpenAI(messages, apiKey) {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: OPENAI_MODEL,
-            messages: messages,
-        }),
+    const openai = new OpenAI({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
     });
-    if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.choices[0].message.content;
+    const response = await openai.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages: messages,
+    });
+    return response.choices[0].message.content || "";
 }
 async function callAnthropic(messages, apiKey) {
     const anthropic = new Anthropic({
@@ -50,81 +45,45 @@ async function callAnthropic(messages, apiKey) {
     return response.content[0].type === "text" ? response.content[0].text : "";
 }
 async function callCohere(messages, apiKey) {
+    const cohere = new CohereClient({
+        token: apiKey,
+    });
     // Convert messages to Cohere format
     const systemMessage = messages.find((m) => m.role === "system");
     const userMessages = messages.filter((m) => m.role !== "system");
     const lastMessage = userMessages[userMessages.length - 1];
-    const response = await fetch("https://api.cohere.ai/v1/chat", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: COHERE_MODEL,
-            message: lastMessage.content,
-            preamble: systemMessage?.content || "",
-        }),
+    const response = await cohere.chat({
+        model: COHERE_MODEL,
+        message: lastMessage.content,
+        preamble: systemMessage?.content || "",
     });
-    if (!response.ok) {
-        throw new Error(`Cohere API error: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.text;
+    return response.text;
 }
 // Streaming provider functions
 async function callOpenAIStreaming(messages, apiKey, callback) {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+    const openai = new OpenAI({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
+    });
+    try {
+        const stream = await openai.chat.completions.create({
             model: OPENAI_MODEL,
             messages: messages,
             stream: true,
-        }),
-    });
-    if (!response.ok) {
-        callback.onError(new Error(`OpenAI API error: ${response.status}`));
-        return;
-    }
-    const reader = response.body?.getReader();
-    if (!reader) {
-        callback.onError(new Error("Failed to get response reader"));
-        return;
-    }
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done)
-                break;
-            const chunk = new TextDecoder().decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    if (data === '[DONE]') {
-                        callback.onComplete();
-                        return;
-                    }
-                    try {
-                        const parsed = JSON.parse(data);
-                        const content = parsed.choices?.[0]?.delta?.content;
-                        if (content) {
-                            callback.onToken(content);
-                        }
-                    }
-                    catch (e) {
-                        // Skip invalid JSON lines
-                    }
-                }
+        });
+        for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content;
+            if (content) {
+                callback.onToken(content);
+            }
+            if (chunk.choices[0]?.finish_reason) {
+                callback.onComplete();
+                return;
             }
         }
     }
     catch (error) {
-        callback.onError(error instanceof Error ? error : new Error("Stream error"));
+        callback.onError(error instanceof Error ? error : new Error("OpenAI streaming error"));
     }
 }
 async function callAnthropicStreaming(messages, apiKey, callback) {
@@ -160,64 +119,34 @@ async function callAnthropicStreaming(messages, apiKey, callback) {
     }
 }
 async function callCohereStreaming(messages, apiKey, callback) {
+    const cohere = new CohereClient({
+        token: apiKey,
+    });
     // Convert messages to Cohere format
     const systemMessage = messages.find((m) => m.role === "system");
     const userMessages = messages.filter((m) => m.role !== "system");
     const lastMessage = userMessages[userMessages.length - 1];
-    const response = await fetch("https://api.cohere.ai/v1/chat", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+    try {
+        const stream = await cohere.chatStream({
             model: COHERE_MODEL,
             message: lastMessage.content,
             preamble: systemMessage?.content || "",
-            stream: true,
-        }),
-    });
-    if (!response.ok) {
-        callback.onError(new Error(`Cohere API error: ${response.status}`));
-        return;
-    }
-    const reader = response.body?.getReader();
-    if (!reader) {
-        callback.onError(new Error("Failed to get response reader"));
-        return;
-    }
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done)
-                break;
-            const chunk = new TextDecoder().decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    try {
-                        const parsed = JSON.parse(data);
-                        if (parsed.event_type === 'text-generation') {
-                            const content = parsed.text;
-                            if (content) {
-                                callback.onToken(content);
-                            }
-                        }
-                        else if (parsed.event_type === 'stream-end') {
-                            callback.onComplete();
-                            return;
-                        }
-                    }
-                    catch (e) {
-                        // Skip invalid JSON lines
-                    }
+        });
+        for await (const event of stream) {
+            if (event.eventType === 'text-generation') {
+                const content = event.text;
+                if (content) {
+                    callback.onToken(content);
                 }
+            }
+            else if (event.eventType === 'stream-end') {
+                callback.onComplete();
+                return;
             }
         }
     }
     catch (error) {
-        callback.onError(error instanceof Error ? error : new Error("Stream error"));
+        callback.onError(error instanceof Error ? error : new Error("Cohere streaming error"));
     }
 }
 // Main LLM dispatcher function
