@@ -17,6 +17,7 @@ import {
   updateProviderUI,
   saveApiKeyFromUI,
   clearActiveProviderFromUI,
+  clearAllKeysFromUI,
   initializeStreaming,
   toggleStreaming,
 } from "./ui.js";
@@ -489,6 +490,7 @@ function initializeApp(): void {
   (window as any).updateProviderUI = updateProviderUI;
   (window as any).saveApiKey = saveApiKeyFromUI;
   (window as any).clearActiveProviderFromUI = clearActiveProviderFromUI;
+  (window as any).clearAllKeys = clearAllKeysFromUI;
   (window as any).toggleStreaming = toggleStreaming;
 
   // Event listeners

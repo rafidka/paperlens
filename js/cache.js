@@ -66,6 +66,9 @@ export function saveActiveProvider(provider, apiKey) {
 export function clearActiveProvider() {
     localStorage.removeItem(API_KEYS_KEY);
 }
+export function clearAllKeys() {
+    localStorage.removeItem(API_KEYS_KEY);
+}
 export function hasActiveProvider() {
     return getActiveProvider() !== null;
 }

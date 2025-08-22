@@ -1,5 +1,5 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, hasActiveProvider, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
+import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, clearAllKeys, hasActiveProvider, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
 export function showError(message) {
     const container = document.getElementById("error-container");
     if (container) {
@@ -320,6 +320,13 @@ export function clearActiveProviderFromUI() {
     clearActiveProvider();
     updateActiveProviderDisplay();
     showSuccess("API provider cleared");
+}
+export function clearAllKeysFromUI() {
+    if (confirm("Are you sure you want to clear all API keys? This action cannot be undone.")) {
+        clearAllKeys();
+        updateActiveProviderDisplay();
+        showSuccess("All API keys cleared");
+    }
 }
 function updateActiveProviderDisplay() {
     const savedKeysContainer = document.getElementById("saved-keys");

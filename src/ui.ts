@@ -1,5 +1,5 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, hasActiveProvider, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
+import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, clearAllKeys, hasActiveProvider, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
 
 interface QAItem {
   question: string;
@@ -390,6 +390,14 @@ export function clearActiveProviderFromUI(): void {
   clearActiveProvider();
   updateActiveProviderDisplay();
   showSuccess("API provider cleared");
+}
+
+export function clearAllKeysFromUI(): void {
+  if (confirm("Are you sure you want to clear all API keys? This action cannot be undone.")) {
+    clearAllKeys();
+    updateActiveProviderDisplay();
+    showSuccess("All API keys cleared");
+  }
 }
 
 function updateActiveProviderDisplay(): void {

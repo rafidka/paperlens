@@ -113,6 +113,10 @@ export function clearActiveProvider(): void {
     localStorage.removeItem(API_KEYS_KEY);
 }
 
+export function clearAllKeys(): void {
+    localStorage.removeItem(API_KEYS_KEY);
+}
+
 export function hasActiveProvider(): boolean {
     return getActiveProvider() !== null;
 }

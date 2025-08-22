@@ -50,6 +50,9 @@
                         <label for="api-key-input">API Key:</label>
                         <input type="password" id="api-key-input" placeholder="Enter your API key">
                         <button class="btn btn-small btn-primary" onclick="saveApiKey()">Save</button>
+                        <div class="security-warning">
+                            ⚠️ <strong>Security Notice:</strong> API keys are stored in your browser's local storage and can be viewed in developer tools. Always clear keys when using shared computers.
+                        </div>
                     </div>
                     <div class="streaming-config">
                         <label class="checkbox-container">
@@ -60,6 +63,9 @@
                         <small class="streaming-note">Note: OpenAI streaming requires verified organization. Anthropic now works in browser!</small>
                     </div>
                     <div id="saved-keys" class="saved-keys"></div>
+                    <div class="key-management">
+                        <button class="btn btn-small btn-danger" onclick="clearAllKeys()">🗑️ Clear All Keys</button>
+                    </div>
                 </div>
             </div>
         </div>
