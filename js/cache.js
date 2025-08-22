@@ -33,7 +33,7 @@ export function cachePaper(paperData, currentPaper, qaHistory) {
         cachedAt: Date.now(),
         summary: currentPaper?.summary,
         concepts: currentPaper?.concepts,
-        readable: currentPaper?.readable,
+        accessible: currentPaper?.accessible,
         qaHistory: qaHistory.length > 0 ? qaHistory : undefined
     };
     localStorage.setItem(cacheKey, JSON.stringify(cacheData));

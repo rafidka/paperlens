@@ -60,7 +60,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="showTab('summary')">Summary</button>
                 <button class="tab" onclick="showTab('concepts')">Key Concepts</button>
-                <button class="tab" onclick="showTab('readable')">Readable Version</button>
+                <button class="tab" onclick="showTab('accessible')">Accessible Version</button>
                 <button class="tab" onclick="showTab('qa')">Q&A</button>
                 <button class="tab" onclick="showTab('original')">Original</button>
             </div>
@@ -77,10 +77,10 @@
                 <div id="concepts-content" class="paper-content" style="display: none;"></div>
             </div>
 
-            <div id="readable-tab" class="tab-content">
-                <h4>Readable Version (Text-to-Speech Optimized)</h4>
-                <button class="btn btn-success" onclick="generateReadable()">Generate Readable Version</button>
-                <div id="readable-content" class="paper-content" style="display: none;"></div>
+            <div id="accessible-tab" class="tab-content">
+                <h4>Accessible Version</h4>
+                <button class="btn btn-success" onclick="generateAccessible()">Generate Accessible Version</button>
+                <div id="accessible-content" class="paper-content" style="display: none;"></div>
             </div>
 
             <div id="qa-tab" class="tab-content">

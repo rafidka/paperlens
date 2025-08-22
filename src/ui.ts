@@ -12,14 +12,14 @@ interface PaperData {
   content: string;
   summary?: string;
   concepts?: string;
-  readable?: string;
+  accessible?: string;
 }
 
 interface CachedPaper extends PaperData {
   cachedAt: number;
   summary?: string;
   concepts?: string;
-  readable?: string;
+  accessible?: string;
   qaHistory?: QAItem[];
 }
 
@@ -68,7 +68,7 @@ export function showLoading(show: boolean = true): void {
 }
 
 export function resetGeneratedContent(): void {
-  ["summary-content", "concepts-content", "readable-content"].forEach((id) => {
+  ["summary-content", "concepts-content", "accessible-content"].forEach((id) => {
     const element = document.getElementById(id);
     if (element) {
       element.style.display = "none";
@@ -136,7 +136,7 @@ export function loadFromCache(
     content: cached.content,
     summary: cached.summary,
     concepts: cached.concepts,
-    readable: cached.readable,
+    accessible: cached.accessible,
   };
 
   const qaHistory = cached.qaHistory || [];
@@ -173,11 +173,11 @@ export function loadFromCache(
     }
   }
 
-  if (cached.readable) {
-    const readableContent = document.getElementById("readable-content");
-    if (readableContent) {
-      readableContent.innerHTML = renderMarkdown(cached.readable);
-      readableContent.style.display = "block";
+  if (cached.accessible) {
+    const accessibleContent = document.getElementById("accessible-content");
+    if (accessibleContent) {
+      accessibleContent.innerHTML = renderMarkdown(cached.accessible);
+      accessibleContent.style.display = "block";
     }
   }
 
@@ -250,7 +250,7 @@ export function showLibrary(): void {
 
         if (cached?.summary) badges.push("Summary");
         if (cached?.concepts) badges.push("Concepts");
-        if (cached?.readable) badges.push("Readable");
+        if (cached?.accessible) badges.push("Accessible");
         if (cached?.qaHistory?.length && cached.qaHistory.length > 0) {
           badges.push(`Q&A (${cached.qaHistory.length})`);
         }

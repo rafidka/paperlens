@@ -37,7 +37,7 @@ export function showLoading(show = true) {
         paperSection.style.display = show ? "none" : "block";
 }
 export function resetGeneratedContent() {
-    ["summary-content", "concepts-content", "readable-content"].forEach((id) => {
+    ["summary-content", "concepts-content", "accessible-content"].forEach((id) => {
         const element = document.getElementById(id);
         if (element) {
             element.style.display = "none";
@@ -96,7 +96,7 @@ export function loadFromCache(cached, callback) {
         content: cached.content,
         summary: cached.summary,
         concepts: cached.concepts,
-        readable: cached.readable,
+        accessible: cached.accessible,
     };
     const qaHistory = cached.qaHistory || [];
     // Update UI elements
@@ -128,11 +128,11 @@ export function loadFromCache(cached, callback) {
             conceptsContent.style.display = "block";
         }
     }
-    if (cached.readable) {
-        const readableContent = document.getElementById("readable-content");
-        if (readableContent) {
-            readableContent.innerHTML = renderMarkdown(cached.readable);
-            readableContent.style.display = "block";
+    if (cached.accessible) {
+        const accessibleContent = document.getElementById("accessible-content");
+        if (accessibleContent) {
+            accessibleContent.innerHTML = renderMarkdown(cached.accessible);
+            accessibleContent.style.display = "block";
         }
     }
     updateQAHistory(qaHistory);
@@ -193,8 +193,8 @@ export function showLibrary() {
                 badges.push("Summary");
             if (cached?.concepts)
                 badges.push("Concepts");
-            if (cached?.readable)
-                badges.push("Readable");
+            if (cached?.accessible)
+                badges.push("Accessible");
             if (cached?.qaHistory?.length && cached.qaHistory.length > 0) {
                 badges.push(`Q&A (${cached.qaHistory.length})`);
             }

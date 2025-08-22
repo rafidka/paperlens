@@ -34,7 +34,7 @@ interface PaperData {
   content: string;
   summary?: string;
   concepts?: string;
-  readable?: string;
+  accessible?: string;
 }
 
 interface QAItem {
@@ -88,6 +88,8 @@ Format your response in markdown with:
 Provide clear, well-formatted answers.
 `.trim();
 
+// Legacy TTS-focused prompt (commented out for potential future use)
+/*
 const READABILITY_PROMPT = `
 You are an AI readability editor preparing technical prose for high-quality text-to-speech narration.
 
@@ -106,6 +108,42 @@ You are an AI readability editor preparing technical prose for high-quality text
 5. Keep section headings, figure captions, table captions, and bullet lists verbatim.
 6. Do **not** alter variable names, numeric values, or claim meanings.
 7. Output only the revised text—no explanations, markdown, or extra headings.
+`.trim();
+*/
+
+const ACCESSIBILITY_PROMPT = `
+You are an expert at making complex academic content accessible to a broader audience. Your goal is to transform dense academic writing into clear, understandable text while preserving all important information and maintaining scientific accuracy.
+
+**Your Task:**
+• Explain technical jargon, specialized terminology, and domain-specific concepts
+• Break down complex sentences into clearer, more readable segments
+• Add brief explanations for abbreviations, acronyms, and field-specific terms
+• Clarify vague references, implicit assumptions, and unstated background knowledge
+• Rephrase convoluted academic language into plain, direct language
+• Maintain all factual content, data, and conclusions exactly as presented
+
+**Formatting Guidelines:**
+• Use markdown formatting for clear structure and readability
+• Use **bold** for key terms and important concepts
+• Use *italics* for emphasis and newly introduced terminology
+• Use \`code formatting\` for technical terms, variables, or specific notation
+• Use > blockquotes for important findings or conclusions
+• Use bullet points (•) or numbered lists (1.) for complex processes or multiple concepts
+• Use ## headings and ### subheadings to organize content clearly
+• Add explanatory notes in [brackets] when introducing complex terms
+• Keep paragraphs reasonably short for better readability
+
+**What NOT to do:**
+• Do not oversimplify to the point of losing meaning
+• Do not add your own opinions or interpretations
+• Do not remove important technical details
+• Do not change the author's conclusions or findings
+• Do not add content that wasn't in the original paper
+
+**Target Audience:** 
+Educated readers who may not be specialists in this particular field but want to understand the research thoroughly.
+
+Format your response as a well-structured, accessible version of the academic paper using proper markdown formatting.
 `.trim();
 
 const MAX_PAPER_LENGTH = 256_000; // current models support bigger windows, but staying safe.
@@ -291,7 +329,7 @@ async function extractConcepts(): Promise<void> {
   }
 }
 
-async function generateReadable(): Promise<void> {
+async function generateAccessible(): Promise<void> {
   if (!currentPaper) {
     showError("Please load a paper first");
     return;
@@ -313,34 +351,70 @@ async function generateReadable(): Promise<void> {
     const messages: ChatMessage[] = [
       {
         role: "system",
-        content: READABILITY_PROMPT,
+        content: ACCESSIBILITY_PROMPT,
       },
       {
         role: "user",
-        content: `Please edit this academic paper for text-to-speech narration:\n\n${currentPaper.content.substring(
-          0,
-          MAX_PAPER_LENGTH
-        )}`,
+        content: `Please create an accessible version of this academic paper by explaining complex concepts and making it understandable for a broader audience:
+
+Title: ${currentPaper.title}
+
+Content:
+${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
       },
     ];
 
-    const readableVersion = await callLLM(messages, llmConfig.provider, llmConfig.key);
+    const accessibleContent = document.getElementById("accessible-content");
+    const isStreamingEnabled = getStreamingEnabled();
 
-    currentPaper.readable = readableVersion;
-    const readableContent = document.getElementById("readable-content");
-    if (readableContent) {
-      readableContent.textContent = readableVersion;
-      readableContent.style.display = "block";
+    if (isStreamingEnabled) {
+      // Streaming mode
+      if (accessibleContent) {
+        accessibleContent.style.display = "block";
+        accessibleContent.innerHTML = "<div class='streaming-indicator'>✨ Creating accessible version...</div>";
+      }
+
+      let accumulatedContent = "";
+
+      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+        onToken: (token) => {
+          accumulatedContent += token;
+          if (accessibleContent) {
+            accessibleContent.innerHTML = renderMarkdown(accumulatedContent);
+          }
+        },
+        onComplete: () => {
+          currentPaper!.accessible = accumulatedContent;
+          cachePaper(currentPaper!, currentPaper!, qaHistory);
+          button.disabled = false;
+          button.textContent = "Generate Accessible Version";
+        },
+        onError: (error) => {
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          showError(`Error generating accessible version: ${errorMessage}`);
+          button.disabled = false;
+          button.textContent = "Generate Accessible Version";
+        }
+      });
+    } else {
+      // Regular mode
+      const accessibleVersion = await callLLM(messages, llmConfig.provider, llmConfig.key);
+      
+      currentPaper!.accessible = accessibleVersion;
+      if (accessibleContent) {
+        accessibleContent.innerHTML = renderMarkdown(accessibleVersion);
+        accessibleContent.style.display = "block";
+      }
+      
+      cachePaper(currentPaper!, currentPaper!, qaHistory);
+      button.disabled = false;
+      button.textContent = "Generate Accessible Version";
     }
-
-    // Update cache
-    cachePaper(currentPaper, currentPaper, qaHistory);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    showError(`Error generating readable version: ${errorMessage}`);
-  } finally {
+    showError(`Error generating accessible version: ${errorMessage}`);
     button.disabled = false;
-    button.textContent = "Generate Readable Version";
+    button.textContent = "Generate Accessible Version";
   }
 }
 
@@ -484,7 +558,7 @@ function initializeApp(): void {
   (window as any).showTab = showTab;
   (window as any).generateSummary = generateSummary;
   (window as any).extractConcepts = extractConcepts;
-  (window as any).generateReadable = generateReadable;
+  (window as any).generateAccessible = generateAccessible;
   (window as any).askQuestion = askQuestion;
   (window as any).loadPaper = handleLoadPaper;
   (window as any).showLibrary = showLibrary;

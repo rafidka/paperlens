@@ -6,7 +6,7 @@ interface PaperData {
     content: string;
     summary?: string;
     concepts?: string;
-    readable?: string;
+    accessible?: string;
 }
 
 interface LibraryEntry extends PaperData {
@@ -17,7 +17,7 @@ interface CachedPaper extends PaperData {
     cachedAt: number;
     summary?: string;
     concepts?: string;
-    readable?: string;
+    accessible?: string;
     qaHistory?: QAItem[];
 }
 
@@ -66,7 +66,7 @@ export function cachePaper(paperData: PaperData, currentPaper: PaperData | null,
         cachedAt: Date.now(),
         summary: currentPaper?.summary,
         concepts: currentPaper?.concepts,
-        readable: currentPaper?.readable,
+        accessible: currentPaper?.accessible,
         qaHistory: qaHistory.length > 0 ? qaHistory : undefined
     };
     
