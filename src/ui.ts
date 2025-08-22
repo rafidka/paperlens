@@ -26,19 +26,37 @@ interface CachedPaper extends PaperData {
 type StateCallback = (paper: PaperData, qaHistory: QAItem[]) => void;
 
 export function showError(message: string): void {
-  const container = document.getElementById("error-container");
-  if (container) {
-    container.innerHTML = `<div class="error">${message}</div>`;
-    setTimeout(() => (container.innerHTML = ""), 5000);
-  }
+  showNotification(message, "error", 5000);
 }
 
 export function showSuccess(message: string): void {
-  const container = document.getElementById("error-container");
-  if (container) {
-    container.innerHTML = `<div class="success">${message}</div>`;
-    setTimeout(() => (container.innerHTML = ""), 3000);
-  }
+  showNotification(message, "success", 3000);
+}
+
+function showNotification(message: string, type: "success" | "error", duration: number): void {
+  const container = document.getElementById("notification-container");
+  if (!container) return;
+  
+  const notification = document.createElement("div");
+  notification.className = `notification notification-${type}`;
+  notification.innerHTML = `
+    <span class="notification-message">${message}</span>
+    <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+  `;
+  
+  container.appendChild(notification);
+  
+  // Auto-remove after duration
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, duration);
+  
+  // Animate in
+  setTimeout(() => {
+    notification.classList.add("notification-show");
+  }, 10);
 }
 
 export function showLoading(show: boolean = true): void {
