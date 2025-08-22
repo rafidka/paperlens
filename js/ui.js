@@ -1,5 +1,5 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveApiKey, removeApiKey, setActiveProvider, clearActiveProvider, clearAllKeys, getSavedApiKeys, hasActiveProvider, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
+import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveApiKey, removeApiKey, setActiveProvider, clearActiveProvider, clearAllKeys, getSavedApiKeys, hasSavedKeys, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
 export function showError(message) {
     showNotification(message, "error", 5000);
 }
@@ -256,14 +256,76 @@ export function clearAll() {
 // Setup section management
 export function initializeSetup() {
     updateActiveProviderDisplay();
-    // Collapse setup if active provider exists
-    if (hasActiveProvider()) {
-        const setupContent = document.getElementById("setup-content");
-        const setupToggle = document.getElementById("setup-toggle");
-        if (setupContent)
-            setupContent.style.display = "none";
-        if (setupToggle)
-            setupToggle.textContent = "▶";
+    updateFirstTimeUserGuidance();
+    // For first-time users, auto-open setup modal
+    if (!hasSavedKeys()) {
+        setTimeout(() => {
+            openSetupModal();
+        }, 1000); // Small delay to let the page load
+    }
+}
+function updateFirstTimeUserGuidance() {
+    const settingsButton = document.querySelector('[onclick="openSetupModal()"]');
+    const searchInput = document.getElementById("arxiv-url");
+    const loadButton = document.querySelector('[onclick="loadPaper()"]');
+    if (!hasSavedKeys()) {
+        // Add visual indicator to settings button
+        if (settingsButton) {
+            settingsButton.classList.add('needs-attention');
+            settingsButton.title = 'Click here to add your API key first!';
+        }
+        // Disable paper loading until keys are set up
+        if (searchInput) {
+            searchInput.placeholder = 'First, click ⚙️ to add your API key, then enter paper URL/ID';
+            searchInput.disabled = true;
+        }
+        if (loadButton) {
+            loadButton.disabled = true;
+            loadButton.textContent = 'Add API Key First';
+        }
+        // Show guidance message
+        showFirstTimeMessage();
+    }
+    else {
+        // Remove indicators for existing users
+        if (settingsButton) {
+            settingsButton.classList.remove('needs-attention');
+            settingsButton.title = 'Settings';
+        }
+        if (searchInput) {
+            searchInput.placeholder = 'Enter Arxiv URL or ID (e.g., 2301.00001)';
+            searchInput.disabled = false;
+        }
+        if (loadButton) {
+            loadButton.disabled = false;
+            loadButton.textContent = 'Load Paper';
+        }
+        // Hide guidance message
+        hideFirstTimeMessage();
+    }
+}
+function showFirstTimeMessage() {
+    const headerContent = document.querySelector('.header-content');
+    if (!headerContent)
+        return;
+    let messageDiv = document.getElementById('first-time-message');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'first-time-message';
+        messageDiv.className = 'first-time-message';
+        messageDiv.innerHTML = `
+      <div class="welcome-message">
+        👋 <strong>Welcome to PaperLens!</strong> 
+        To get started, click the <strong>⚙️ Settings</strong> button to add your AI provider API key.
+      </div>
+    `;
+        headerContent.appendChild(messageDiv);
+    }
+}
+function hideFirstTimeMessage() {
+    const messageDiv = document.getElementById('first-time-message');
+    if (messageDiv) {
+        messageDiv.remove();
     }
 }
 export function toggleSetup() {
@@ -316,6 +378,7 @@ export function saveApiKeyFromUI() {
     saveApiKey(provider, apiKey);
     setActiveProvider(provider);
     updateActiveProviderDisplay();
+    updateFirstTimeUserGuidance(); // Update UI guidance after saving key
     showSuccess(`${provider.charAt(0).toUpperCase() + provider.slice(1)} API key saved and set as active!`);
     // Clear inputs and collapse setup
     apiKeyInput.value = "";

@@ -321,14 +321,86 @@ export function clearAll(): void {
 // Setup section management
 export function initializeSetup(): void {
   updateActiveProviderDisplay();
+  updateFirstTimeUserGuidance();
   
-  // Collapse setup if active provider exists
-  if (hasActiveProvider()) {
-    const setupContent = document.getElementById("setup-content");
-    const setupToggle = document.getElementById("setup-toggle");
+  // For first-time users, auto-open setup modal
+  if (!hasSavedKeys()) {
+    setTimeout(() => {
+      openSetupModal();
+    }, 1000); // Small delay to let the page load
+  }
+}
+
+function updateFirstTimeUserGuidance(): void {
+  const settingsButton = document.querySelector('[onclick="openSetupModal()"]') as HTMLElement;
+  const searchInput = document.getElementById("arxiv-url") as HTMLInputElement;
+  const loadButton = document.querySelector('[onclick="loadPaper()"]') as HTMLButtonElement;
+  
+  if (!hasSavedKeys()) {
+    // Add visual indicator to settings button
+    if (settingsButton) {
+      settingsButton.classList.add('needs-attention');
+      settingsButton.title = 'Click here to add your API key first!';
+    }
     
-    if (setupContent) setupContent.style.display = "none";
-    if (setupToggle) setupToggle.textContent = "▶";
+    // Disable paper loading until keys are set up
+    if (searchInput) {
+      searchInput.placeholder = 'First, click ⚙️ to add your API key, then enter paper URL/ID';
+      searchInput.disabled = true;
+    }
+    
+    if (loadButton) {
+      loadButton.disabled = true;
+      loadButton.textContent = 'Add API Key First';
+    }
+    
+    // Show guidance message
+    showFirstTimeMessage();
+  } else {
+    // Remove indicators for existing users
+    if (settingsButton) {
+      settingsButton.classList.remove('needs-attention');
+      settingsButton.title = 'Settings';
+    }
+    
+    if (searchInput) {
+      searchInput.placeholder = 'Enter Arxiv URL or ID (e.g., 2301.00001)';
+      searchInput.disabled = false;
+    }
+    
+    if (loadButton) {
+      loadButton.disabled = false;
+      loadButton.textContent = 'Load Paper';
+    }
+    
+    // Hide guidance message
+    hideFirstTimeMessage();
+  }
+}
+
+function showFirstTimeMessage(): void {
+  const headerContent = document.querySelector('.header-content');
+  if (!headerContent) return;
+  
+  let messageDiv = document.getElementById('first-time-message');
+  if (!messageDiv) {
+    messageDiv = document.createElement('div');
+    messageDiv.id = 'first-time-message';
+    messageDiv.className = 'first-time-message';
+    messageDiv.innerHTML = `
+      <div class="welcome-message">
+        👋 <strong>Welcome to PaperLens!</strong> 
+        To get started, click the <strong>⚙️ Settings</strong> button to add your AI provider API key.
+      </div>
+    `;
+    headerContent.appendChild(messageDiv);
+  }
+}
+
+function hideFirstTimeMessage(): void {
+  const messageDiv = document.getElementById('first-time-message');
+  if (messageDiv) {
+    messageDiv.remove();
   }
 }
 
@@ -391,6 +463,7 @@ export function saveApiKeyFromUI(): void {
   saveApiKey(provider, apiKey);
   setActiveProvider(provider);
   updateActiveProviderDisplay();
+  updateFirstTimeUserGuidance(); // Update UI guidance after saving key
   showSuccess(`${provider.charAt(0).toUpperCase() + provider.slice(1)} API key saved and set as active!`);
   
   // Clear inputs and collapse setup
