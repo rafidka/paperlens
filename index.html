@@ -9,7 +9,7 @@
     <!-- CSS Imports -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
-    
+
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script type="importmap">
@@ -29,6 +29,11 @@
         <div class="header">
             <h1>🔬 PaperLens</h1>
             <p>AI-Powered Arxiv Paper Reader with Summary, Q&A, and Readability Enhancement</p>
+            <div class="feedback-link">
+                💡 <a href="https://github.com/rafidka/paperlens/issues" target="_blank" rel="noopener noreferrer">
+                    Have a feature idea or found a bug? Click here to let us know!
+                </a>
+            </div>
         </div>
 
         <div class="setup-panel">
@@ -52,7 +57,8 @@
                         <input type="password" id="api-key-input" placeholder="Enter your API key">
                         <button class="btn btn-small btn-primary" onclick="saveApiKey()">Save</button>
                         <div class="security-warning">
-                            ⚠️ <strong>Security Notice:</strong> API keys are stored in your browser's local storage and can be viewed in developer tools. Always clear keys when using shared computers.
+                            ⚠️ <strong>Security Notice:</strong> API keys are stored in your browser's local storage and
+                            can be viewed in developer tools. Always clear keys when using shared computers.
                         </div>
                     </div>
                     <div class="streaming-config">
@@ -61,7 +67,8 @@
                             <span class="checkmark"></span>
                             Enable Streaming (real-time responses)
                         </label>
-                        <small class="streaming-note">Note: OpenAI streaming requires verified organization. Anthropic now works in browser!</small>
+                        <small class="streaming-note">Note: OpenAI streaming requires verified organization. Anthropic
+                            now works in browser!</small>
                     </div>
                     <div id="saved-keys" class="saved-keys"></div>
                     <div class="key-management">
