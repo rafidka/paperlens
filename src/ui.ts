@@ -128,7 +128,15 @@ export function loadFromCache(
   const originalContent = document.getElementById("original-content");
 
   if (paperTitle) paperTitle.textContent = currentPaper.title;
-  if (originalContent) originalContent.textContent = currentPaper.content;
+  if (originalContent) {
+    // Format the content with proper line breaks and preserve structure
+    const formattedContent = currentPaper.content
+      .replace(/\n\n+/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+      .replace(/^/, '<p>')
+      .replace(/$/, '</p>');
+    originalContent.innerHTML = formattedContent;
+  }
 
   // Load cached AI-generated content
   if (cached.summary) {

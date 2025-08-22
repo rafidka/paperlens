@@ -310,6 +310,24 @@ body {
     font-style: italic;
 }
 
+/* Original content specific styling */
+#original-content {
+    white-space: pre-wrap;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+#original-content p {
+    margin-bottom: 15px;
+    text-indent: 1.5em;
+}
+
+#original-content p:first-child {
+    text-indent: 0;
+}
+
 /* Q&A section */
 .qa-section {
     margin-top: 20px;

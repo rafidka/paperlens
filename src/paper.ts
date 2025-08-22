@@ -123,7 +123,15 @@ export async function loadPaper(
     const originalContent = document.getElementById("original-content");
 
     if (paperTitle) paperTitle.textContent = paperData.title;
-    if (originalContent) originalContent.textContent = paperData.content;
+    if (originalContent) {
+      // Format the content with proper line breaks and preserve structure
+      const formattedContent = paperData.content
+        .replace(/\n\n+/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>');
+      originalContent.innerHTML = formattedContent;
+    }
 
     showLoading(false);
     showSuccess("Paper loaded and cached successfully!");
