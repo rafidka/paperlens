@@ -1,5 +1,5 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveActiveProvider, clearActiveProvider, clearAllKeys, hasActiveProvider, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
+import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveApiKey, removeApiKey, setActiveProvider, clearActiveProvider, clearAllKeys, getSavedApiKeys, hasActiveProvider, hasSavedKeys, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
 
 interface QAItem {
   question: string;
@@ -367,10 +367,11 @@ export function saveApiKeyFromUI(): void {
     return;
   }
   
-  // Save the active provider
-  saveActiveProvider(provider, apiKey);
+  // Save the key and make it active
+  saveApiKey(provider, apiKey);
+  setActiveProvider(provider);
   updateActiveProviderDisplay();
-  showSuccess(`${provider} API key saved`);
+  showSuccess(`${provider.charAt(0).toUpperCase() + provider.slice(1)} API key saved and set as active!`);
   
   // Clear inputs and collapse setup
   apiKeyInput.value = "";
@@ -400,13 +401,30 @@ export function clearAllKeysFromUI(): void {
   }
 }
 
+export function setActiveProviderFromUI(provider: 'openai' | 'anthropic' | 'cohere'): void {
+  setActiveProvider(provider);
+  updateActiveProviderDisplay();
+  const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+  showSuccess(`${providerName} is now the active provider`);
+}
+
+export function removeApiKeyFromUI(provider: 'openai' | 'anthropic' | 'cohere'): void {
+  const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+  if (confirm(`Are you sure you want to remove the ${providerName} API key?`)) {
+    removeApiKey(provider);
+    updateActiveProviderDisplay();
+    showSuccess(`${providerName} API key removed`);
+  }
+}
+
 function updateActiveProviderDisplay(): void {
   const savedKeysContainer = document.getElementById("saved-keys");
   if (!savedKeysContainer) return;
   
+  const savedKeys = getSavedApiKeys();
   const activeProvider = getActiveProvider();
   
-  if (!activeProvider || !activeProvider.apiKey || !activeProvider.provider) {
+  if (Object.keys(savedKeys).length === 0) {
     savedKeysContainer.innerHTML = "";
     return;
   }
@@ -417,14 +435,28 @@ function updateActiveProviderDisplay(): void {
     cohere: "Cohere"
   };
   
-  savedKeysContainer.innerHTML = `
-    <div class="saved-keys-header">Active API Provider:</div>
-    <div class="saved-key-item">
-      <span class="provider-name">${providerNames[activeProvider.provider]}</span>
-      <span class="key-preview">${activeProvider.apiKey.substring(0, 8)}...</span>
-      <button class="btn btn-small btn-danger" onclick="clearActiveProviderFromUI()">Change</button>
-    </div>
-  `;
+  let html = '<div class="saved-keys-header">Saved API Keys:</div>';
+  
+  for (const [provider, apiKey] of Object.entries(savedKeys)) {
+    const isActive = activeProvider && activeProvider.provider === provider;
+    const providerName = providerNames[provider as keyof typeof providerNames] || provider;
+    
+    html += `
+      <div class="saved-key-item ${isActive ? 'active' : ''}">
+        <div class="key-info">
+          <span class="provider-name">${providerName}</span>
+          <span class="key-preview">${apiKey.substring(0, 8)}...</span>
+          ${isActive ? '<span class="active-badge">Active</span>' : ''}
+        </div>
+        <div class="key-actions">
+          ${!isActive ? `<button class="btn btn-small btn-primary" onclick="setActiveProviderFromUI('${provider}')">Use</button>` : ''}
+          <button class="btn btn-small btn-danger" onclick="removeApiKeyFromUI('${provider}')">Remove</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  savedKeysContainer.innerHTML = html;
 }
 
 // Streaming configuration functions

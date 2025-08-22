@@ -29,6 +29,7 @@ interface QAItem {
 const CACHE_PREFIX = 'paperlens_';
 const LIBRARY_KEY = 'paperlens_library';
 const API_KEYS_KEY = 'paperlens_api_keys';
+const ACTIVE_PROVIDER_KEY = 'paperlens_active_provider';
 
 export function getCacheKey(arxivId: string): string {
     return CACHE_PREFIX + arxivId;
@@ -93,32 +94,82 @@ export function clearAllCache(): void {
     localStorage.removeItem(LIBRARY_KEY);
 }
 
-// API Key management - Single active provider
+// API Key management - Multiple providers with active selection
+export interface SavedApiKeys {
+    [provider: string]: string; // provider -> apiKey
+}
+
 export interface ActiveProvider {
     provider: 'openai' | 'anthropic' | 'cohere';
     apiKey: string;
 }
 
-export function getActiveProvider(): ActiveProvider | null {
+export function getSavedApiKeys(): SavedApiKeys {
     const stored = localStorage.getItem(API_KEYS_KEY);
-    return stored ? JSON.parse(stored) : null;
+    return stored ? JSON.parse(stored) : {};
 }
 
-export function saveActiveProvider(provider: 'openai' | 'anthropic' | 'cohere', apiKey: string): void {
-    const activeProvider: ActiveProvider = { provider, apiKey };
-    localStorage.setItem(API_KEYS_KEY, JSON.stringify(activeProvider));
+export function saveApiKey(provider: 'openai' | 'anthropic' | 'cohere', apiKey: string): void {
+    const savedKeys = getSavedApiKeys();
+    savedKeys[provider] = apiKey;
+    localStorage.setItem(API_KEYS_KEY, JSON.stringify(savedKeys));
+}
+
+export function removeApiKey(provider: 'openai' | 'anthropic' | 'cohere'): void {
+    const savedKeys = getSavedApiKeys();
+    delete savedKeys[provider];
+    localStorage.setItem(API_KEYS_KEY, JSON.stringify(savedKeys));
+    
+    // If the removed key was the active one, clear active provider
+    const activeProvider = getActiveProvider();
+    if (activeProvider && activeProvider.provider === provider) {
+        clearActiveProvider();
+    }
+}
+
+export function getActiveProvider(): ActiveProvider | null {
+    const stored = localStorage.getItem(ACTIVE_PROVIDER_KEY);
+    if (!stored) return null;
+    
+    const activeProvider = JSON.parse(stored);
+    const savedKeys = getSavedApiKeys();
+    
+    // Verify the active provider still has a saved key
+    if (savedKeys[activeProvider.provider]) {
+        return {
+            provider: activeProvider.provider,
+            apiKey: savedKeys[activeProvider.provider]
+        };
+    }
+    
+    // If not, clear the invalid active provider
+    clearActiveProvider();
+    return null;
+}
+
+export function setActiveProvider(provider: 'openai' | 'anthropic' | 'cohere'): void {
+    const savedKeys = getSavedApiKeys();
+    if (savedKeys[provider]) {
+        localStorage.setItem(ACTIVE_PROVIDER_KEY, JSON.stringify({ provider }));
+    }
 }
 
 export function clearActiveProvider(): void {
-    localStorage.removeItem(API_KEYS_KEY);
+    localStorage.removeItem(ACTIVE_PROVIDER_KEY);
 }
 
 export function clearAllKeys(): void {
     localStorage.removeItem(API_KEYS_KEY);
+    localStorage.removeItem(ACTIVE_PROVIDER_KEY);
 }
 
 export function hasActiveProvider(): boolean {
     return getActiveProvider() !== null;
+}
+
+export function hasSavedKeys(): boolean {
+    const savedKeys = getSavedApiKeys();
+    return Object.keys(savedKeys).length > 0;
 }
 
 // Streaming preference

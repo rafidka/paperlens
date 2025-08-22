@@ -2,7 +2,7 @@
 import { loadPaper, extractArxivId } from "./paper.js";
 import { getSelectedProvider, callLLM, callLLMStreaming } from "./llm.js";
 import { cachePaper, getStreamingEnabled } from "./cache.js";
-import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, clearAllKeysFromUI, initializeStreaming, toggleStreaming, } from "./ui.js";
+import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, clearAllKeysFromUI, setActiveProviderFromUI, removeApiKeyFromUI, initializeStreaming, toggleStreaming, } from "./ui.js";
 // Global state
 let currentPaper = null;
 let qaHistory = [];
@@ -408,6 +408,8 @@ function initializeApp() {
     window.saveApiKey = saveApiKeyFromUI;
     window.clearActiveProviderFromUI = clearActiveProviderFromUI;
     window.clearAllKeys = clearAllKeysFromUI;
+    window.setActiveProviderFromUI = setActiveProviderFromUI;
+    window.removeApiKeyFromUI = removeApiKeyFromUI;
     window.toggleStreaming = toggleStreaming;
     // Event listeners
     const qaInput = document.getElementById("qa-input");
