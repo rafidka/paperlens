@@ -1,5 +1,5 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveApiKey, removeApiKey, setActiveProvider, clearActiveProvider, clearAllKeys, getSavedApiKeys, hasSavedKeys, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
+import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveApiKey, removeApiKey, setActiveProvider, clearActiveProvider, clearAllKeys, getSavedApiKeys, hasSavedKeys, getStreamingEnabled, setStreamingEnabled, } from "./cache.js";
 export function showError(message) {
     showNotification(message, "error", 5000);
 }
@@ -107,10 +107,10 @@ export function loadFromCache(cached, callback) {
     if (originalContent) {
         // Format the content with proper line breaks and preserve structure
         const formattedContent = currentPaper.content
-            .replace(/\n\n+/g, '</p><p>')
-            .replace(/\n/g, '<br>')
-            .replace(/^/, '<p>')
-            .replace(/$/, '</p>');
+            .replace(/\n\n+/g, "</p><p>")
+            .replace(/\n/g, "<br>")
+            .replace(/^/, "<p>")
+            .replace(/$/, "</p>");
         originalContent.innerHTML = formattedContent;
     }
     // Load cached AI-generated content
@@ -257,12 +257,6 @@ export function clearAll() {
 export function initializeSetup() {
     updateActiveProviderDisplay();
     updateFirstTimeUserGuidance();
-    // For first-time users, auto-open setup modal
-    if (!hasSavedKeys()) {
-        setTimeout(() => {
-            openSetupModal();
-        }, 1000); // Small delay to let the page load
-    }
 }
 function updateFirstTimeUserGuidance() {
     const settingsButton = document.querySelector('[onclick="openSetupModal()"]');
@@ -271,17 +265,17 @@ function updateFirstTimeUserGuidance() {
     if (!hasSavedKeys()) {
         // Add visual indicator to settings button
         if (settingsButton) {
-            settingsButton.classList.add('needs-attention');
-            settingsButton.title = 'Click here to add your API key first!';
+            settingsButton.classList.add("needs-attention");
+            settingsButton.title = "Click here to add your API key first!";
         }
         // Disable paper loading until keys are set up
         if (searchInput) {
-            searchInput.placeholder = 'First, click ⚙️ to add your API key, then enter paper URL/ID';
+            searchInput.placeholder = "First, click ⚙️ to add your API key, then enter paper URL/ID";
             searchInput.disabled = true;
         }
         if (loadButton) {
             loadButton.disabled = true;
-            loadButton.textContent = 'Add API Key First';
+            loadButton.textContent = "Add API Key First";
         }
         // Show guidance message
         showFirstTimeMessage();
@@ -289,30 +283,30 @@ function updateFirstTimeUserGuidance() {
     else {
         // Remove indicators for existing users
         if (settingsButton) {
-            settingsButton.classList.remove('needs-attention');
-            settingsButton.title = 'Settings';
+            settingsButton.classList.remove("needs-attention");
+            settingsButton.title = "Settings";
         }
         if (searchInput) {
-            searchInput.placeholder = 'Enter Arxiv URL or ID (e.g., 2301.00001)';
+            searchInput.placeholder = "Enter Arxiv URL or ID (e.g., 2301.00001)";
             searchInput.disabled = false;
         }
         if (loadButton) {
             loadButton.disabled = false;
-            loadButton.textContent = 'Load Paper';
+            loadButton.textContent = "Load Paper";
         }
         // Hide guidance message
         hideFirstTimeMessage();
     }
 }
 function showFirstTimeMessage() {
-    const headerContent = document.querySelector('.header-content');
+    const headerContent = document.querySelector(".header-content");
     if (!headerContent)
         return;
-    let messageDiv = document.getElementById('first-time-message');
+    let messageDiv = document.getElementById("first-time-message");
     if (!messageDiv) {
-        messageDiv = document.createElement('div');
-        messageDiv.id = 'first-time-message';
-        messageDiv.className = 'first-time-message';
+        messageDiv = document.createElement("div");
+        messageDiv.id = "first-time-message";
+        messageDiv.className = "first-time-message";
         messageDiv.innerHTML = `
       <div class="welcome-message">
         👋 <strong>Welcome to PaperLens!</strong> 
@@ -323,7 +317,7 @@ function showFirstTimeMessage() {
     }
 }
 function hideFirstTimeMessage() {
-    const messageDiv = document.getElementById('first-time-message');
+    const messageDiv = document.getElementById("first-time-message");
     if (messageDiv) {
         messageDiv.remove();
     }
@@ -347,7 +341,7 @@ export function updateProviderUI() {
         const placeholders = {
             openai: "sk-...",
             anthropic: "sk-ant-...",
-            cohere: "Your Cohere API key"
+            cohere: "Your Cohere API key",
         };
         apiKeyInput.placeholder = placeholders[provider];
         apiKeyInput.disabled = false;
@@ -432,21 +426,23 @@ function updateActiveProviderDisplay() {
     const providerNames = {
         openai: "OpenAI",
         anthropic: "Anthropic",
-        cohere: "Cohere"
+        cohere: "Cohere",
     };
     let html = '<div class="saved-keys-header">Saved API Keys:</div>';
     for (const [provider, apiKey] of Object.entries(savedKeys)) {
         const isActive = activeProvider && activeProvider.provider === provider;
         const providerName = providerNames[provider] || provider;
         html += `
-      <div class="saved-key-item ${isActive ? 'active' : ''}">
+      <div class="saved-key-item ${isActive ? "active" : ""}">
         <div class="key-info">
           <span class="provider-name">${providerName}</span>
           <span class="key-preview">${apiKey.substring(0, 8)}...</span>
-          ${isActive ? '<span class="active-badge">Active</span>' : ''}
+          ${isActive ? '<span class="active-badge">Active</span>' : ""}
         </div>
         <div class="key-actions">
-          ${!isActive ? `<button class="btn btn-small btn-primary" onclick="setActiveProviderFromUI('${provider}')">Use</button>` : ''}
+          ${!isActive
+            ? `<button class="btn btn-small btn-primary" onclick="setActiveProviderFromUI('${provider}')">Use</button>`
+            : ""}
           <button class="btn btn-small btn-danger" onclick="removeApiKeyFromUI('${provider}')">Remove</button>
         </div>
       </div>

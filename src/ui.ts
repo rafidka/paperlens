@@ -1,5 +1,21 @@
 // UI management and DOM manipulation for PaperLens
-import { getLibrary, getCachedPaper, deleteCachedPaper, clearAllCache, getActiveProvider, saveApiKey, removeApiKey, setActiveProvider, clearActiveProvider, clearAllKeys, getSavedApiKeys, hasActiveProvider, hasSavedKeys, getStreamingEnabled, setStreamingEnabled } from "./cache.js";
+import {
+  getLibrary,
+  getCachedPaper,
+  deleteCachedPaper,
+  clearAllCache,
+  getActiveProvider,
+  saveApiKey,
+  removeApiKey,
+  setActiveProvider,
+  clearActiveProvider,
+  clearAllKeys,
+  getSavedApiKeys,
+  hasActiveProvider,
+  hasSavedKeys,
+  getStreamingEnabled,
+  setStreamingEnabled,
+} from "./cache.js";
 
 interface QAItem {
   question: string;
@@ -36,23 +52,23 @@ export function showSuccess(message: string): void {
 function showNotification(message: string, type: "success" | "error", duration: number): void {
   const container = document.getElementById("notification-container");
   if (!container) return;
-  
+
   const notification = document.createElement("div");
   notification.className = `notification notification-${type}`;
   notification.innerHTML = `
     <span class="notification-message">${message}</span>
     <button class="notification-close" onclick="this.parentElement.remove()">×</button>
   `;
-  
+
   container.appendChild(notification);
-  
+
   // Auto-remove after duration
   setTimeout(() => {
     if (notification.parentNode) {
       notification.remove();
     }
   }, duration);
-  
+
   // Animate in
   setTimeout(() => {
     notification.classList.add("notification-show");
@@ -149,10 +165,10 @@ export function loadFromCache(
   if (originalContent) {
     // Format the content with proper line breaks and preserve structure
     const formattedContent = currentPaper.content
-      .replace(/\n\n+/g, '</p><p>')
-      .replace(/\n/g, '<br>')
-      .replace(/^/, '<p>')
-      .replace(/$/, '</p>');
+      .replace(/\n\n+/g, "</p><p>")
+      .replace(/\n/g, "<br>")
+      .replace(/^/, "<p>")
+      .replace(/$/, "</p>");
     originalContent.innerHTML = formattedContent;
   }
 
@@ -322,71 +338,64 @@ export function clearAll(): void {
 export function initializeSetup(): void {
   updateActiveProviderDisplay();
   updateFirstTimeUserGuidance();
-  
-  // For first-time users, auto-open setup modal
-  if (!hasSavedKeys()) {
-    setTimeout(() => {
-      openSetupModal();
-    }, 1000); // Small delay to let the page load
-  }
 }
 
 function updateFirstTimeUserGuidance(): void {
   const settingsButton = document.querySelector('[onclick="openSetupModal()"]') as HTMLElement;
   const searchInput = document.getElementById("arxiv-url") as HTMLInputElement;
   const loadButton = document.querySelector('[onclick="loadPaper()"]') as HTMLButtonElement;
-  
+
   if (!hasSavedKeys()) {
     // Add visual indicator to settings button
     if (settingsButton) {
-      settingsButton.classList.add('needs-attention');
-      settingsButton.title = 'Click here to add your API key first!';
+      settingsButton.classList.add("needs-attention");
+      settingsButton.title = "Click here to add your API key first!";
     }
-    
+
     // Disable paper loading until keys are set up
     if (searchInput) {
-      searchInput.placeholder = 'First, click ⚙️ to add your API key, then enter paper URL/ID';
+      searchInput.placeholder = "First, click ⚙️ to add your API key, then enter paper URL/ID";
       searchInput.disabled = true;
     }
-    
+
     if (loadButton) {
       loadButton.disabled = true;
-      loadButton.textContent = 'Add API Key First';
+      loadButton.textContent = "Add API Key First";
     }
-    
+
     // Show guidance message
     showFirstTimeMessage();
   } else {
     // Remove indicators for existing users
     if (settingsButton) {
-      settingsButton.classList.remove('needs-attention');
-      settingsButton.title = 'Settings';
+      settingsButton.classList.remove("needs-attention");
+      settingsButton.title = "Settings";
     }
-    
+
     if (searchInput) {
-      searchInput.placeholder = 'Enter Arxiv URL or ID (e.g., 2301.00001)';
+      searchInput.placeholder = "Enter Arxiv URL or ID (e.g., 2301.00001)";
       searchInput.disabled = false;
     }
-    
+
     if (loadButton) {
       loadButton.disabled = false;
-      loadButton.textContent = 'Load Paper';
+      loadButton.textContent = "Load Paper";
     }
-    
+
     // Hide guidance message
     hideFirstTimeMessage();
   }
 }
 
 function showFirstTimeMessage(): void {
-  const headerContent = document.querySelector('.header-content');
+  const headerContent = document.querySelector(".header-content");
   if (!headerContent) return;
-  
-  let messageDiv = document.getElementById('first-time-message');
+
+  let messageDiv = document.getElementById("first-time-message");
   if (!messageDiv) {
-    messageDiv = document.createElement('div');
-    messageDiv.id = 'first-time-message';
-    messageDiv.className = 'first-time-message';
+    messageDiv = document.createElement("div");
+    messageDiv.id = "first-time-message";
+    messageDiv.className = "first-time-message";
     messageDiv.innerHTML = `
       <div class="welcome-message">
         👋 <strong>Welcome to PaperLens!</strong> 
@@ -398,7 +407,7 @@ function showFirstTimeMessage(): void {
 }
 
 function hideFirstTimeMessage(): void {
-  const messageDiv = document.getElementById('first-time-message');
+  const messageDiv = document.getElementById("first-time-message");
   if (messageDiv) {
     messageDiv.remove();
   }
@@ -407,11 +416,11 @@ function hideFirstTimeMessage(): void {
 export function toggleSetup(): void {
   const setupContent = document.getElementById("setup-content");
   const setupToggle = document.getElementById("setup-toggle");
-  
+
   if (!setupContent || !setupToggle) return;
-  
+
   const isVisible = setupContent.style.display !== "none";
-  
+
   setupContent.style.display = isVisible ? "none" : "block";
   setupToggle.textContent = isVisible ? "▶" : "▼";
 }
@@ -419,16 +428,16 @@ export function toggleSetup(): void {
 export function updateProviderUI(): void {
   const providerSelect = document.getElementById("provider-select") as HTMLSelectElement;
   const apiKeyInput = document.getElementById("api-key-input") as HTMLInputElement;
-  
+
   if (!providerSelect || !apiKeyInput) return;
-  
+
   const provider = providerSelect.value;
-  
+
   if (provider) {
     const placeholders = {
       openai: "sk-...",
       anthropic: "sk-ant-...",
-      cohere: "Your Cohere API key"
+      cohere: "Your Cohere API key",
     };
     apiKeyInput.placeholder = placeholders[provider as keyof typeof placeholders];
     apiKeyInput.disabled = false;
@@ -443,39 +452,41 @@ export function updateProviderUI(): void {
 export function saveApiKeyFromUI(): void {
   const providerSelect = document.getElementById("provider-select") as HTMLSelectElement;
   const apiKeyInput = document.getElementById("api-key-input") as HTMLInputElement;
-  
+
   if (!providerSelect || !apiKeyInput) return;
-  
-  const provider = providerSelect.value as 'openai' | 'anthropic' | 'cohere';
+
+  const provider = providerSelect.value as "openai" | "anthropic" | "cohere";
   const apiKey = apiKeyInput.value.trim();
-  
+
   if (!provider) {
     showError("Please select a provider");
     return;
   }
-  
+
   if (!apiKey) {
     showError("Please enter an API key");
     return;
   }
-  
+
   // Save the key and make it active
   saveApiKey(provider, apiKey);
   setActiveProvider(provider);
   updateActiveProviderDisplay();
   updateFirstTimeUserGuidance(); // Update UI guidance after saving key
-  showSuccess(`${provider.charAt(0).toUpperCase() + provider.slice(1)} API key saved and set as active!`);
-  
+  showSuccess(
+    `${provider.charAt(0).toUpperCase() + provider.slice(1)} API key saved and set as active!`
+  );
+
   // Clear inputs and collapse setup
   apiKeyInput.value = "";
   providerSelect.value = "";
   apiKeyInput.disabled = true;
   apiKeyInput.placeholder = "Select a provider first";
-  
+
   // Auto-collapse setup section
   const setupContent = document.getElementById("setup-content");
   const setupToggle = document.getElementById("setup-toggle");
-  
+
   if (setupContent) setupContent.style.display = "none";
   if (setupToggle) setupToggle.textContent = "▶";
 }
@@ -494,14 +505,14 @@ export function clearAllKeysFromUI(): void {
   }
 }
 
-export function setActiveProviderFromUI(provider: 'openai' | 'anthropic' | 'cohere'): void {
+export function setActiveProviderFromUI(provider: "openai" | "anthropic" | "cohere"): void {
   setActiveProvider(provider);
   updateActiveProviderDisplay();
   const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
   showSuccess(`${providerName} is now the active provider`);
 }
 
-export function removeApiKeyFromUI(provider: 'openai' | 'anthropic' | 'cohere'): void {
+export function removeApiKeyFromUI(provider: "openai" | "anthropic" | "cohere"): void {
   const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
   if (confirm(`Are you sure you want to remove the ${providerName} API key?`)) {
     removeApiKey(provider);
@@ -513,42 +524,46 @@ export function removeApiKeyFromUI(provider: 'openai' | 'anthropic' | 'cohere'):
 function updateActiveProviderDisplay(): void {
   const savedKeysContainer = document.getElementById("saved-keys");
   if (!savedKeysContainer) return;
-  
+
   const savedKeys = getSavedApiKeys();
   const activeProvider = getActiveProvider();
-  
+
   if (Object.keys(savedKeys).length === 0) {
     savedKeysContainer.innerHTML = "";
     return;
   }
-  
+
   const providerNames = {
     openai: "OpenAI",
-    anthropic: "Anthropic", 
-    cohere: "Cohere"
+    anthropic: "Anthropic",
+    cohere: "Cohere",
   };
-  
+
   let html = '<div class="saved-keys-header">Saved API Keys:</div>';
-  
+
   for (const [provider, apiKey] of Object.entries(savedKeys)) {
     const isActive = activeProvider && activeProvider.provider === provider;
     const providerName = providerNames[provider as keyof typeof providerNames] || provider;
-    
+
     html += `
-      <div class="saved-key-item ${isActive ? 'active' : ''}">
+      <div class="saved-key-item ${isActive ? "active" : ""}">
         <div class="key-info">
           <span class="provider-name">${providerName}</span>
           <span class="key-preview">${apiKey.substring(0, 8)}...</span>
-          ${isActive ? '<span class="active-badge">Active</span>' : ''}
+          ${isActive ? '<span class="active-badge">Active</span>' : ""}
         </div>
         <div class="key-actions">
-          ${!isActive ? `<button class="btn btn-small btn-primary" onclick="setActiveProviderFromUI('${provider}')">Use</button>` : ''}
+          ${
+            !isActive
+              ? `<button class="btn btn-small btn-primary" onclick="setActiveProviderFromUI('${provider}')">Use</button>`
+              : ""
+          }
           <button class="btn btn-small btn-danger" onclick="removeApiKeyFromUI('${provider}')">Remove</button>
         </div>
       </div>
     `;
   }
-  
+
   savedKeysContainer.innerHTML = html;
 }
 
@@ -592,7 +607,7 @@ export function openLibraryPanel(): void {
     setTimeout(() => {
       panel.classList.add("open");
     }, 10);
-    
+
     // Auto-show the library content when panel opens
     showLibrary();
   }
