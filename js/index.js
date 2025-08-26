@@ -143,7 +143,8 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
             // Streaming mode
             if (summaryContent) {
                 summaryContent.style.display = "block";
-                summaryContent.innerHTML = "<div class='streaming-indicator'>✨ Generating summary...</div>";
+                summaryContent.innerHTML =
+                    "<div class='streaming-indicator'>✨ Generating summary...</div>";
             }
             let accumulatedContent = "";
             await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
@@ -164,7 +165,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
                     showError(`Error generating summary: ${errorMessage}`);
                     button.disabled = false;
                     button.textContent = "Generate Summary";
-                }
+                },
             });
         }
         else {
@@ -219,7 +220,8 @@ async function extractConcepts() {
             // Streaming mode
             if (conceptsContent) {
                 conceptsContent.style.display = "block";
-                conceptsContent.innerHTML = "<div class='streaming-indicator'>✨ Extracting concepts...</div>";
+                conceptsContent.innerHTML =
+                    "<div class='streaming-indicator'>✨ Extracting concepts...</div>";
             }
             let accumulatedContent = "";
             await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
@@ -240,7 +242,7 @@ async function extractConcepts() {
                     showError(`Error extracting concepts: ${errorMessage}`);
                     button.disabled = false;
                     button.textContent = "Extract Key Concepts";
-                }
+                },
             });
         }
         else {
@@ -300,7 +302,8 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
             // Streaming mode
             if (accessibleContent) {
                 accessibleContent.style.display = "block";
-                accessibleContent.innerHTML = "<div class='streaming-indicator'>✨ Creating accessible version...</div>";
+                accessibleContent.innerHTML =
+                    "<div class='streaming-indicator'>✨ Creating accessible version...</div>";
             }
             let accumulatedContent = "";
             await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
@@ -321,7 +324,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
                     showError(`Error generating accessible version: ${errorMessage}`);
                     button.disabled = false;
                     button.textContent = "Generate Accessible Version";
-                }
+                },
             });
         }
         else {
@@ -412,7 +415,7 @@ Question: ${question}`,
                     showError(`Error getting answer: ${errorMessage}`);
                     button.disabled = false;
                     button.textContent = "Ask Question";
-                }
+                },
             });
         }
         else {
@@ -462,19 +465,23 @@ function handleLoadCachedPaper(arxivId) {
 // URL parameter handling for arxivory integration
 function handleUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
-    const paperId = urlParams.get('paper');
-    const source = urlParams.get('source');
+    const paperId = urlParams.get("paper");
+    const source = urlParams.get("source");
     if (paperId) {
         // Populate the arxiv input field
-        const arxivInput = document.getElementById('arxiv-url');
+        const arxivInput = document.getElementById("arxiv-url");
         if (arxivInput) {
             arxivInput.value = paperId;
             updateCacheStatus(extractArxivId(paperId));
         }
         // Show a welcome message for arxivory users
-        if (source === 'arxivory') {
+        if (source === "arxivory") {
             showArxivoryWelcome(paperId);
         }
+        // Automatically load the paper (works even without API keys for paper content)
+        setTimeout(() => {
+            handleLoadPaper();
+        }, 500); // Small delay to ensure UI is ready
         // Clean up URL without triggering reload
         const cleanUrl = window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
@@ -493,18 +500,18 @@ function showArxivoryWelcome(paperId) {
       <div class="welcome-message" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
         🔬 <strong>Paper loaded from arxivory!</strong> 
         Paper ID: <code>${paperId}</code><br>
-        ${!hasSavedKeys() ?
-            'To analyze this paper, first click <strong>⚙️ Settings</strong> to add your AI provider API key, then click <strong>Load Paper</strong>.' :
-            'Click <strong>Load Paper</strong> to start analyzing this paper with AI assistance!'}
+        ${!hasSavedKeys()
+            ? "Paper content is loading... To enable AI analysis features, click <strong>⚙️ Settings</strong> to add your AI provider API key."
+            : "Paper is loading and ready for AI analysis! Use the tabs below to generate summaries, extract concepts, or ask questions."}
       </div>
     `;
         headerContent.appendChild(welcomeDiv);
-        // Auto-remove after 8 seconds
+        // Auto-remove after 30 seconds
         setTimeout(() => {
             if (welcomeDiv && welcomeDiv.parentNode) {
                 welcomeDiv.remove();
             }
-        }, 8000);
+        }, 30000);
     }
 }
 // Initialize the application

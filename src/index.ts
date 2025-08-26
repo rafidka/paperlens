@@ -569,6 +569,11 @@ function handleUrlParameters(): void {
       showArxivoryWelcome(paperId);
     }
 
+    // Automatically load the paper (works even without API keys for paper content)
+    setTimeout(() => {
+      handleLoadPaper();
+    }, 500); // Small delay to ensure UI is ready
+
     // Clean up URL without triggering reload
     const cleanUrl = window.location.pathname;
     window.history.replaceState({}, document.title, cleanUrl);
@@ -590,8 +595,8 @@ function showArxivoryWelcome(paperId: string): void {
         Paper ID: <code>${paperId}</code><br>
         ${
           !hasSavedKeys()
-            ? "To analyze this paper, first click <strong>⚙️ Settings</strong> to add your AI provider API key, then click <strong>Load Paper</strong>."
-            : "Click <strong>Load Paper</strong> to start analyzing this paper with AI assistance!"
+            ? "Paper content is loading... To enable AI analysis features, click <strong>⚙️ Settings</strong> to add your AI provider API key."
+            : "Paper is loading and ready for AI analysis! Use the tabs below to generate summaries, extract concepts, or ask questions."
         }
       </div>
     `;
