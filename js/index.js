@@ -1,7 +1,7 @@
 // Main application logic for PaperLens
 import { loadPaper, extractArxivId } from "./paper.js";
 import { getSelectedProvider, callLLM, callLLMStreaming } from "./llm.js";
-import { cachePaper, getStreamingEnabled } from "./cache.js";
+import { cachePaper, getStreamingEnabled, hasSavedKeys } from "./cache.js";
 import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, clearAllKeysFromUI, setActiveProviderFromUI, removeApiKeyFromUI, initializeStreaming, toggleStreaming, openSetupModal, closeSetupModal, openLibraryPanel, closeLibraryPanel, } from "./ui.js";
 // Global state
 let currentPaper = null;
@@ -459,11 +459,61 @@ function handleLoadCachedPaper(arxivId) {
     };
     loadCachedPaper(arxivId, updateStateCallback);
 }
+// URL parameter handling for arxivory integration
+function handleUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paperId = urlParams.get('paper');
+    const source = urlParams.get('source');
+    if (paperId) {
+        // Populate the arxiv input field
+        const arxivInput = document.getElementById('arxiv-url');
+        if (arxivInput) {
+            arxivInput.value = paperId;
+            updateCacheStatus(extractArxivId(paperId));
+        }
+        // Show a welcome message for arxivory users
+        if (source === 'arxivory') {
+            showArxivoryWelcome(paperId);
+        }
+        // Clean up URL without triggering reload
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
+}
+function showArxivoryWelcome(paperId) {
+    const headerContent = document.querySelector(".header-content");
+    if (!headerContent)
+        return;
+    let welcomeDiv = document.getElementById("arxivory-welcome");
+    if (!welcomeDiv) {
+        welcomeDiv = document.createElement("div");
+        welcomeDiv.id = "arxivory-welcome";
+        welcomeDiv.className = "first-time-message";
+        welcomeDiv.innerHTML = `
+      <div class="welcome-message" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
+        🔬 <strong>Paper loaded from arxivory!</strong> 
+        Paper ID: <code>${paperId}</code><br>
+        ${!hasSavedKeys() ?
+            'To analyze this paper, first click <strong>⚙️ Settings</strong> to add your AI provider API key, then click <strong>Load Paper</strong>.' :
+            'Click <strong>Load Paper</strong> to start analyzing this paper with AI assistance!'}
+      </div>
+    `;
+        headerContent.appendChild(welcomeDiv);
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+            if (welcomeDiv && welcomeDiv.parentNode) {
+                welcomeDiv.remove();
+            }
+        }, 8000);
+    }
+}
 // Initialize the application
 function initializeApp() {
     // Initialize setup section
     initializeSetup();
     initializeStreaming();
+    // Handle URL parameters for arxivory integration
+    handleUrlParameters();
     // Make functions globally available for onclick handlers
     window.showTab = showTab;
     window.generateSummary = generateSummary;

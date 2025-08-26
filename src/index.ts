@@ -1,7 +1,7 @@
 // Main application logic for PaperLens
 import { loadPaper, extractArxivId } from "./paper.js";
 import { getSelectedProvider, callLLM, callLLMStreaming, ChatMessage } from "./llm.js";
-import { cachePaper, getStreamingEnabled } from "./cache.js";
+import { cachePaper, getStreamingEnabled, hasSavedKeys } from "./cache.js";
 import {
   showError,
   showTab,
@@ -41,7 +41,6 @@ interface QAItem {
   question: string;
   answer: string;
 }
-
 
 // Global state
 let currentPaper: PaperData | null = null;
@@ -196,7 +195,8 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
       // Streaming mode
       if (summaryContent) {
         summaryContent.style.display = "block";
-        summaryContent.innerHTML = "<div class='streaming-indicator'>✨ Generating summary...</div>";
+        summaryContent.innerHTML =
+          "<div class='streaming-indicator'>✨ Generating summary...</div>";
       }
 
       let accumulatedContent = "";
@@ -219,18 +219,18 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
           showError(`Error generating summary: ${errorMessage}`);
           button.disabled = false;
           button.textContent = "Generate Summary";
-        }
+        },
       });
     } else {
       // Regular mode
       const summary = await callLLM(messages, llmConfig.provider, llmConfig.key);
-      
+
       currentPaper!.summary = summary;
       if (summaryContent) {
         summaryContent.innerHTML = renderMarkdown(summary);
         summaryContent.style.display = "block";
       }
-      
+
       cachePaper(currentPaper!, currentPaper!, qaHistory);
       button.disabled = false;
       button.textContent = "Generate Summary";
@@ -282,7 +282,8 @@ async function extractConcepts(): Promise<void> {
       // Streaming mode
       if (conceptsContent) {
         conceptsContent.style.display = "block";
-        conceptsContent.innerHTML = "<div class='streaming-indicator'>✨ Extracting concepts...</div>";
+        conceptsContent.innerHTML =
+          "<div class='streaming-indicator'>✨ Extracting concepts...</div>";
       }
 
       let accumulatedContent = "";
@@ -305,18 +306,18 @@ async function extractConcepts(): Promise<void> {
           showError(`Error extracting concepts: ${errorMessage}`);
           button.disabled = false;
           button.textContent = "Extract Key Concepts";
-        }
+        },
       });
     } else {
       // Regular mode
       const concepts = await callLLM(messages, llmConfig.provider, llmConfig.key);
-      
+
       currentPaper!.concepts = concepts;
       if (conceptsContent) {
         conceptsContent.innerHTML = renderMarkdown(concepts);
         conceptsContent.style.display = "block";
       }
-      
+
       cachePaper(currentPaper!, currentPaper!, qaHistory);
       button.disabled = false;
       button.textContent = "Extract Key Concepts";
@@ -371,7 +372,8 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
       // Streaming mode
       if (accessibleContent) {
         accessibleContent.style.display = "block";
-        accessibleContent.innerHTML = "<div class='streaming-indicator'>✨ Creating accessible version...</div>";
+        accessibleContent.innerHTML =
+          "<div class='streaming-indicator'>✨ Creating accessible version...</div>";
       }
 
       let accumulatedContent = "";
@@ -394,18 +396,18 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
           showError(`Error generating accessible version: ${errorMessage}`);
           button.disabled = false;
           button.textContent = "Generate Accessible Version";
-        }
+        },
       });
     } else {
       // Regular mode
       const accessibleVersion = await callLLM(messages, llmConfig.provider, llmConfig.key);
-      
+
       currentPaper!.accessible = accessibleVersion;
       if (accessibleContent) {
         accessibleContent.innerHTML = renderMarkdown(accessibleVersion);
         accessibleContent.style.display = "block";
       }
-      
+
       cachePaper(currentPaper!, currentPaper!, qaHistory);
       button.disabled = false;
       button.textContent = "Generate Accessible Version";
@@ -495,19 +497,19 @@ Question: ${question}`,
           showError(`Error getting answer: ${errorMessage}`);
           button.disabled = false;
           button.textContent = "Ask Question";
-        }
+        },
       });
     } else {
       // Regular mode
       const answer = await callLLM(messages, llmConfig.provider, llmConfig.key);
-      
+
       qaHistory.push({ question, answer });
       updateQAHistory(qaHistory);
-      
+
       if (currentPaper) {
         cachePaper(currentPaper, currentPaper, qaHistory);
       }
-      
+
       questionInput.value = "";
       button.disabled = false;
       button.textContent = "Ask Question";
@@ -548,11 +550,70 @@ function handleLoadCachedPaper(arxivId: string): void {
   loadCachedPaper(arxivId, updateStateCallback);
 }
 
+// URL parameter handling for arxivory integration
+function handleUrlParameters(): void {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paperId = urlParams.get("paper");
+  const source = urlParams.get("source");
+
+  if (paperId) {
+    // Populate the arxiv input field
+    const arxivInput = document.getElementById("arxiv-url") as HTMLInputElement;
+    if (arxivInput) {
+      arxivInput.value = paperId;
+      updateCacheStatus(extractArxivId(paperId));
+    }
+
+    // Show a welcome message for arxivory users
+    if (source === "arxivory") {
+      showArxivoryWelcome(paperId);
+    }
+
+    // Clean up URL without triggering reload
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+}
+
+function showArxivoryWelcome(paperId: string): void {
+  const headerContent = document.querySelector(".header-content");
+  if (!headerContent) return;
+
+  let welcomeDiv = document.getElementById("arxivory-welcome");
+  if (!welcomeDiv) {
+    welcomeDiv = document.createElement("div");
+    welcomeDiv.id = "arxivory-welcome";
+    welcomeDiv.className = "first-time-message";
+    welcomeDiv.innerHTML = `
+      <div class="welcome-message" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
+        🔬 <strong>Paper loaded from arxivory!</strong> 
+        Paper ID: <code>${paperId}</code><br>
+        ${
+          !hasSavedKeys()
+            ? "To analyze this paper, first click <strong>⚙️ Settings</strong> to add your AI provider API key, then click <strong>Load Paper</strong>."
+            : "Click <strong>Load Paper</strong> to start analyzing this paper with AI assistance!"
+        }
+      </div>
+    `;
+    headerContent.appendChild(welcomeDiv);
+
+    // Auto-remove after 30 seconds
+    setTimeout(() => {
+      if (welcomeDiv && welcomeDiv.parentNode) {
+        welcomeDiv.remove();
+      }
+    }, 30000);
+  }
+}
+
 // Initialize the application
 function initializeApp(): void {
   // Initialize setup section
   initializeSetup();
   initializeStreaming();
+
+  // Handle URL parameters for arxivory integration
+  handleUrlParameters();
 
   // Make functions globally available for onclick handlers
   (window as any).showTab = showTab;
@@ -605,10 +666,10 @@ function initializeApp(): void {
 
   // Initialize cache status
   updateCacheStatus(null);
-  
+
   // Click outside modal to close
   const setupModal = document.getElementById("setup-modal");
-  setupModal?.addEventListener("click", function(e: MouseEvent) {
+  setupModal?.addEventListener("click", function (e: MouseEvent) {
     if (e.target === setupModal) {
       closeSetupModal();
     }
