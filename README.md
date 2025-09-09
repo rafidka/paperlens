@@ -5,7 +5,7 @@ A static web application for reading and analyzing academic papers from Arxiv us
 ## Features
 
 - 📄 **Paper Loading**: Load papers directly from Arxiv using paper IDs or URLs
-- 🤖 **AI Integration**: Support for OpenAI, Anthropic Claude, and Cohere APIs
+- 🤖 **AI Integration**: Support for Cohere, OpenAI, and Anthropic APIs
 - 📝 **Smart Analysis**: Generate summaries, extract key concepts, and create readable versions
 - 💬 **Interactive Q&A**: Ask questions about loaded papers and get AI-powered answers
 - 💾 **Caching**: Automatic caching of papers and AI-generated content for offline access
@@ -23,7 +23,7 @@ paperlens/
 ├── src/               # TypeScript source files
 │   ├── index.ts      # Main application logic and initialization
 │   ├── cache.ts      # LocalStorage caching functionality
-│   ├── llm.ts        # LLM provider integrations (OpenAI, Anthropic, Cohere)
+│   ├── llm.ts        # LLM provider integrations (Cohere, Anthropic, OpenAI)
 │   ├── ui.ts         # UI interactions and DOM manipulation
 │   └── paper.ts      # Paper loading and processing from Arxiv
 ├── js/                # Compiled JavaScript (generated from src/)
@@ -44,6 +44,7 @@ paperlens/
 Visit https://rafidka.github.io/paperlens/ to use the deployed version
 
 **Local Development:**
+
 ```bash
 # Compile TypeScript to JavaScript
 npx tsc
@@ -55,6 +56,7 @@ npx tsc
 ```
 
 **Option 3: Using any HTTP server**
+
 ```bash
 # Python (built-in)
 python3 -m http.server 8000
@@ -62,11 +64,12 @@ python3 -m http.server 8000
 # Node.js (if you have it)
 npx serve
 
-# PHP (if you have it)  
+# PHP (if you have it)
 php -S localhost:8000
 ```
 
 ### Using the App
+
 1. **API Keys**: Enter your API key(s) for at least one LLM provider
 2. **Load Paper**: Enter an Arxiv paper URL or ID (e.g., `2301.00001`)
 3. **Analyze**: Use the tabs to generate summaries, extract concepts, or create readable versions
@@ -75,7 +78,7 @@ php -S localhost:8000
 
 ## Browser Compatibility
 
-- Requires ES6 module support and HTTP server (due to CORS policy)  
+- Requires ES6 module support and HTTP server (due to CORS policy)
 - Works offline after initial paper loading and caching
 - TypeScript compilation required for local development
 - Deployed version works directly in any modern browser
@@ -85,6 +88,7 @@ php -S localhost:8000
 ### Development Workflow
 
 **Standard development:**
+
 ```bash
 # 1. Edit TypeScript files in src/ or CSS files
 # 2. Compile TypeScript to JavaScript
@@ -96,6 +100,7 @@ npx tsc
 ```
 
 **For quick testing:**
+
 ```bash
 # Just compile and test directly
 npx tsc && ./start.sh
@@ -105,7 +110,7 @@ npx tsc && ./start.sh
 
 The application uses TypeScript modules with ES2020 compilation for clean organization:
 
-- **src/cache.ts**: Handles all localStorage operations and library management  
+- **src/cache.ts**: Handles all localStorage operations and library management
 - **src/llm.ts**: Contains API integrations and prompt management
 - **src/paper.ts**: Manages Arxiv paper fetching and content parsing
 - **src/ui.ts**: Handles all DOM manipulation and user interface updates
@@ -122,9 +127,10 @@ The application uses TypeScript modules with ES2020 compilation for clean organi
 ## API Keys
 
 You'll need API keys from one or more of these providers:
-- **OpenAI**: Get from https://platform.openai.com/api-keys
-- **Anthropic**: Get from https://console.anthropic.com/
+
 - **Cohere**: Get from https://dashboard.cohere.ai/api-keys
+- **Anthropic**: Get from https://console.anthropic.com/
+- **OpenAI**: Get from https://platform.openai.com/api-keys
 
 API keys are stored locally in your browser and never sent to external servers except the respective API providers.
 
