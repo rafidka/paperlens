@@ -709,6 +709,22 @@ body {
     margin-top: 20px;
 }
 
+/* Make Q&A tab fill available height */
+#qa-tab {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 280px); /* Account for header, tabs, and padding */
+}
+
+#qa-tab.active {
+    display: flex;
+}
+
+#qa-tab h4 {
+    flex-shrink: 0;
+    margin-bottom: 15px;
+}
+
 .qa-input {
     width: 100%;
     padding: 10px;
@@ -717,16 +733,18 @@ body {
     margin-bottom: 10px;
     resize: vertical;
     min-height: 80px;
+    flex-shrink: 0;
 }
 
 .qa-history {
-    max-height: 300px;
+    flex: 1;
     overflow-y: auto;
     background: #f8f9fa;
     padding: 15px;
     border-radius: 5px;
     border: 1px solid #e9ecef;
     margin-bottom: 15px;
+    min-height: 200px;
 }
 
 .qa-item {
@@ -735,6 +753,7 @@ body {
     background: white;
     border-radius: 5px;
     border-left: 4px solid #3498db;
+    flex-shrink: 0;
 }
 
 .qa-question {
@@ -746,6 +765,23 @@ body {
 .qa-answer {
     color: #555;
     line-height: 1.5;
+}
+
+/* Q&A button stays at bottom */
+#qa-tab .btn {
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+/* Responsive adjustments for Q&A */
+@media (max-width: 768px) {
+    #qa-tab {
+        height: calc(100vh - 320px); /* More space for mobile header */
+    }
+    
+    .qa-history {
+        min-height: 150px;
+    }
 }
 
 /* Markdown styling within Q&A answers */

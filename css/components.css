@@ -31,6 +31,11 @@
     display: block;
 }
 
+/* Override for Q&A tab to use flex layout */
+#qa-tab.tab-content.active {
+    display: flex;
+}
+
 /* Library Panel */
 .library-panel {
     background: white;
