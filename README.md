@@ -5,7 +5,8 @@ A static web application for reading and analyzing academic papers from Arxiv us
 ## Features
 
 - 📄 **Paper Loading**: Load papers directly from Arxiv using paper IDs or URLs
-- 🤖 **AI Integration**: Support for Cohere, OpenAI, and Anthropic APIs
+- 🤖 **AI Integration**: Support for Cohere, OpenAI, and Anthropic APIs with latest 2025 models
+- ⚙️ **Model Selection**: Choose from multiple AI models for each provider (GPT-5, Claude Opus 4.1, Command A, etc.)
 - 📝 **Smart Analysis**: Generate summaries, extract key concepts, and create readable versions
 - 💬 **Interactive Q&A**: Ask questions about loaded papers and get AI-powered answers
 - 💾 **Caching**: Automatic caching of papers and AI-generated content for offline access
@@ -70,11 +71,12 @@ php -S localhost:8000
 
 ### Using the App
 
-1. **API Keys**: Enter your API key(s) for at least one LLM provider
-2. **Load Paper**: Enter an Arxiv paper URL or ID (e.g., `2301.00001`)
-3. **Analyze**: Use the tabs to generate summaries, extract concepts, or create readable versions
-4. **Q&A**: Ask questions about the paper in the Q&A tab
-5. **Library**: Access your cached papers through the Paper Library
+1. **API Keys**: Enter your API key(s) for at least one LLM provider and select your preferred model
+2. **Model Selection**: Choose from the latest 2025 models for optimal performance
+3. **Load Paper**: Enter an Arxiv paper URL or ID (e.g., `2301.00001`)
+4. **Analyze**: Use the tabs to generate summaries, extract concepts, or create readable versions
+5. **Q&A**: Ask questions about the paper in the Q&A tab
+6. **Library**: Access your cached papers through the Paper Library
 
 ## Browser Compatibility
 
@@ -124,7 +126,7 @@ The application uses TypeScript modules with ES2020 compilation for clean organi
 
 **Important:** Always edit the TypeScript files in `src/` and CSS files. The `js/` folder is auto-generated.
 
-## API Keys
+## API Keys & Models
 
 You'll need API keys from one or more of these providers:
 
@@ -132,7 +134,23 @@ You'll need API keys from one or more of these providers:
 - **Anthropic**: Get from https://console.anthropic.com/
 - **OpenAI**: Get from https://platform.openai.com/api-keys
 
-API keys are stored locally in your browser and never sent to external servers except the respective API providers.
+### Supported Models (2025)
+
+**OpenAI:**
+- GPT-5 (flagship model with state-of-the-art performance)
+- GPT-5 Mini (fast and affordable)
+- GPT-5 Nano (smallest and fastest)
+- GPT-4.1 (enhanced coding and reasoning)
+
+**Anthropic:**
+- Claude Opus 4.1 (most capable model)
+- Claude Sonnet 4 (high-performance reasoning)
+
+**Cohere:**
+- Command A (March 2025) - Best for agentic tasks
+- Command A Reasoning (August 2025) - Advanced reasoning capabilities
+
+API keys are stored locally in your browser and never sent to external servers except the respective API providers. Model selections are also saved locally for convenience.
 
 ## Technical Notes
 
