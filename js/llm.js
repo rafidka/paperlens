@@ -2,7 +2,7 @@
 import { getActiveProvider } from "./cache.js";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
-import { CohereClient } from "cohere-ai";
+import { CohereClientV2 } from "cohere-ai";
 // Available models for each provider
 export const AVAILABLE_MODELS = {
     openai: [
@@ -68,19 +68,27 @@ async function callAnthropic(messages, apiKey, model) {
     return response.content[0].type === "text" ? response.content[0].text : "";
 }
 async function callCohere(messages, apiKey, model) {
-    const cohere = new CohereClient({
+    const cohere = new CohereClientV2({
         token: apiKey,
     });
-    // Convert messages to Cohere format
-    const systemMessage = messages.find((m) => m.role === "system");
-    const userMessages = messages.filter((m) => m.role !== "system");
-    const lastMessage = userMessages[userMessages.length - 1];
+    // Convert messages to Cohere V2 format - system message goes at the beginning of messages array
+    const cohereMessages = messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+    }));
     const response = await cohere.chat({
         model: model || DEFAULT_MODELS.cohere,
-        message: lastMessage.content,
-        preamble: systemMessage?.content || "",
+        messages: cohereMessages,
     });
-    return response.text;
+    // Handle different content types in response
+    const content = response.message.content;
+    if (content && content.length > 0) {
+        const firstContent = content[0];
+        if ("text" in firstContent) {
+            return firstContent.text;
+        }
+    }
+    return "";
 }
 // Streaming provider functions
 async function callOpenAIStreaming(messages, apiKey, model, callback) {
@@ -142,27 +150,28 @@ async function callAnthropicStreaming(messages, apiKey, model, callback) {
     }
 }
 async function callCohereStreaming(messages, apiKey, model, callback) {
-    const cohere = new CohereClient({
+    const cohere = new CohereClientV2({
         token: apiKey,
     });
-    // Convert messages to Cohere format
-    const systemMessage = messages.find((m) => m.role === "system");
-    const userMessages = messages.filter((m) => m.role !== "system");
-    const lastMessage = userMessages[userMessages.length - 1];
+    // Convert messages to Cohere V2 format - system message goes at the beginning of messages array
+    const cohereMessages = messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+    }));
     try {
         const stream = await cohere.chatStream({
             model: model || DEFAULT_MODELS.cohere,
-            message: lastMessage.content,
-            preamble: systemMessage?.content || "",
+            messages: cohereMessages,
         });
         for await (const event of stream) {
-            if (event.eventType === "text-generation") {
-                const content = event.text;
-                if (content) {
-                    callback.onToken(content);
+            if (event.type === "content-delta") {
+                // Handle different types of content deltas
+                const delta = event.delta;
+                if (delta && "text" in delta && typeof delta.text === "string") {
+                    callback.onToken(delta.text);
                 }
             }
-            else if (event.eventType === "stream-end") {
+            else if (event.type === "message-end") {
                 callback.onComplete();
                 return;
             }
