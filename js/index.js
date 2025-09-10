@@ -2,7 +2,7 @@
 import { loadPaper, extractArxivId } from "./paper.js";
 import { getSelectedProvider, callLLM, callLLMStreaming } from "./llm.js";
 import { cachePaper, getStreamingEnabled, hasSavedKeys } from "./cache.js";
-import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, clearAllKeysFromUI, setActiveProviderFromUI, removeApiKeyFromUI, initializeStreaming, toggleStreaming, openSetupModal, closeSetupModal, openLibraryPanel, closeLibraryPanel, } from "./ui.js";
+import { showError, showTab, updateCacheStatus, updateQAHistory, showLibrary, loadCachedPaper, deletePaper, clearCache, clearAll, initializeSetup, toggleSetup, updateProviderUI, saveApiKeyFromUI, clearActiveProviderFromUI, clearAllKeysFromUI, setActiveProviderFromUI, removeApiKeyFromUI, initializeStreaming, toggleStreaming, openSetupModal, closeSetupModal, openLibraryPanel, closeLibraryPanel, updateModelSelection, } from "./ui.js";
 // Global state
 let currentPaper = null;
 let qaHistory = [];
@@ -147,7 +147,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
                     "<div class='streaming-indicator'>✨ Generating summary...</div>";
             }
             let accumulatedContent = "";
-            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
                 onToken: (token) => {
                     accumulatedContent += token;
                     if (summaryContent) {
@@ -170,7 +170,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
         }
         else {
             // Regular mode
-            const summary = await callLLM(messages, llmConfig.provider, llmConfig.key);
+            const summary = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
             currentPaper.summary = summary;
             if (summaryContent) {
                 summaryContent.innerHTML = renderMarkdown(summary);
@@ -224,7 +224,7 @@ async function extractConcepts() {
                     "<div class='streaming-indicator'>✨ Extracting concepts...</div>";
             }
             let accumulatedContent = "";
-            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
                 onToken: (token) => {
                     accumulatedContent += token;
                     if (conceptsContent) {
@@ -247,7 +247,7 @@ async function extractConcepts() {
         }
         else {
             // Regular mode
-            const concepts = await callLLM(messages, llmConfig.provider, llmConfig.key);
+            const concepts = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
             currentPaper.concepts = concepts;
             if (conceptsContent) {
                 conceptsContent.innerHTML = renderMarkdown(concepts);
@@ -306,7 +306,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
                     "<div class='streaming-indicator'>✨ Creating accessible version...</div>";
             }
             let accumulatedContent = "";
-            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
                 onToken: (token) => {
                     accumulatedContent += token;
                     if (accessibleContent) {
@@ -329,7 +329,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
         }
         else {
             // Regular mode
-            const accessibleVersion = await callLLM(messages, llmConfig.provider, llmConfig.key);
+            const accessibleVersion = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
             currentPaper.accessible = accessibleVersion;
             if (accessibleContent) {
                 accessibleContent.innerHTML = renderMarkdown(accessibleVersion);
@@ -395,7 +395,7 @@ Question: ${question}`,
             updateQAHistory(qaHistory);
             questionInput.value = "";
             let accumulatedAnswer = "";
-            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+            await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
                 onToken: (token) => {
                     accumulatedAnswer += token;
                     qaHistory[qaHistory.length - 1].answer = accumulatedAnswer;
@@ -420,7 +420,7 @@ Question: ${question}`,
         }
         else {
             // Regular mode
-            const answer = await callLLM(messages, llmConfig.provider, llmConfig.key);
+            const answer = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
             qaHistory.push({ question, answer });
             updateQAHistory(qaHistory);
             if (currentPaper) {
@@ -545,6 +545,7 @@ function initializeApp() {
     window.closeSetupModal = closeSetupModal;
     window.openLibraryPanel = openLibraryPanel;
     window.closeLibraryPanel = closeLibraryPanel;
+    window.updateModelSelection = updateModelSelection;
     // Event listeners
     const qaInput = document.getElementById("qa-input");
     qaInput?.addEventListener("keydown", function (e) {

@@ -1,17 +1,38 @@
 // LLM provider integrations for PaperLens
 import { getActiveProvider } from "./cache.js";
-import Anthropic from '@anthropic-ai/sdk';
-import OpenAI from 'openai';
-import { CohereClient } from 'cohere-ai';
+import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
+import { CohereClient } from "cohere-ai";
 
-// Model constants
-const OPENAI_MODEL = "gpt-5";
-const ANTHROPIC_MODEL = "claude-opus-4-1-20250805";
-const COHERE_MODEL = "command-a-03-2025";
+// Available models for each provider
+export const AVAILABLE_MODELS = {
+  openai: [
+    { id: "gpt-5", name: "GPT-5" },
+    { id: "gpt-5-mini", name: "GPT-5 Mini" },
+    { id: "gpt-5-nano", name: "GPT-5 Mini" },
+    { id: "gpt-4.1", name: "GPT-4.1" },
+  ],
+  anthropic: [
+    { id: "claude-opus-4-1-20250805", name: "Claude Opus 4.1" },
+    { id: "claude-sonnet-4-20250522", name: "Claude Sonnet 4" },
+  ],
+  cohere: [
+    { id: "command-a-03-2025", name: "Command A (03/2025)" },
+    { id: "command-a-reasoning-08-2025", name: "Command A Reasoning (08/2025)" },
+  ],
+};
+
+// Default models (first in each list)
+const DEFAULT_MODELS = {
+  openai: AVAILABLE_MODELS.openai[0].id,
+  anthropic: AVAILABLE_MODELS.anthropic[0].id,
+  cohere: AVAILABLE_MODELS.cohere[0].id,
+};
 
 interface LLMProvider {
   provider: "openai" | "anthropic" | "cohere";
   key: string;
+  model?: string;
 }
 
 export interface ChatMessage {
@@ -29,28 +50,40 @@ export function getSelectedProvider(): LLMProvider | null {
   const activeProvider = getActiveProvider();
 
   if (activeProvider) {
-    return { provider: activeProvider.provider, key: activeProvider.apiKey };
+    return {
+      provider: activeProvider.provider,
+      key: activeProvider.apiKey,
+      model: activeProvider.model || DEFAULT_MODELS[activeProvider.provider],
+    };
   }
 
   return null;
 }
 
 // Individual provider functions
-async function callOpenAI(messages: ChatMessage[], apiKey: string): Promise<string> {
+async function callOpenAI(
+  messages: ChatMessage[],
+  apiKey: string,
+  model?: string
+): Promise<string> {
   const openai = new OpenAI({
     apiKey: apiKey,
     dangerouslyAllowBrowser: true,
   });
 
   const response = await openai.chat.completions.create({
-    model: OPENAI_MODEL,
+    model: model || DEFAULT_MODELS.openai,
     messages: messages,
   });
 
   return response.choices[0].message.content || "";
 }
 
-async function callAnthropic(messages: ChatMessage[], apiKey: string): Promise<string> {
+async function callAnthropic(
+  messages: ChatMessage[],
+  apiKey: string,
+  model?: string
+): Promise<string> {
   const anthropic = new Anthropic({
     apiKey: apiKey,
     dangerouslyAllowBrowser: true,
@@ -60,7 +93,7 @@ async function callAnthropic(messages: ChatMessage[], apiKey: string): Promise<s
   const userMessages = messages.filter((m) => m.role !== "system");
 
   const response = await anthropic.messages.create({
-    model: ANTHROPIC_MODEL,
+    model: model || DEFAULT_MODELS.anthropic,
     max_tokens: 4096,
     messages: userMessages.map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
@@ -72,7 +105,11 @@ async function callAnthropic(messages: ChatMessage[], apiKey: string): Promise<s
   return response.content[0].type === "text" ? response.content[0].text : "";
 }
 
-async function callCohere(messages: ChatMessage[], apiKey: string): Promise<string> {
+async function callCohere(
+  messages: ChatMessage[],
+  apiKey: string,
+  model?: string
+): Promise<string> {
   const cohere = new CohereClient({
     token: apiKey,
   });
@@ -83,7 +120,7 @@ async function callCohere(messages: ChatMessage[], apiKey: string): Promise<stri
   const lastMessage = userMessages[userMessages.length - 1];
 
   const response = await cohere.chat({
-    model: COHERE_MODEL,
+    model: model || DEFAULT_MODELS.cohere,
     message: lastMessage.content,
     preamble: systemMessage?.content || "",
   });
@@ -92,7 +129,12 @@ async function callCohere(messages: ChatMessage[], apiKey: string): Promise<stri
 }
 
 // Streaming provider functions
-async function callOpenAIStreaming(messages: ChatMessage[], apiKey: string, callback: StreamCallback): Promise<void> {
+async function callOpenAIStreaming(
+  messages: ChatMessage[],
+  apiKey: string,
+  model: string | undefined,
+  callback: StreamCallback
+): Promise<void> {
   const openai = new OpenAI({
     apiKey: apiKey,
     dangerouslyAllowBrowser: true,
@@ -100,7 +142,7 @@ async function callOpenAIStreaming(messages: ChatMessage[], apiKey: string, call
 
   try {
     const stream = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
+      model: model || DEFAULT_MODELS.openai,
       messages: messages,
       stream: true,
     });
@@ -110,7 +152,7 @@ async function callOpenAIStreaming(messages: ChatMessage[], apiKey: string, call
       if (content) {
         callback.onToken(content);
       }
-      
+
       if (chunk.choices[0]?.finish_reason) {
         callback.onComplete();
         return;
@@ -121,7 +163,12 @@ async function callOpenAIStreaming(messages: ChatMessage[], apiKey: string, call
   }
 }
 
-async function callAnthropicStreaming(messages: ChatMessage[], apiKey: string, callback: StreamCallback): Promise<void> {
+async function callAnthropicStreaming(
+  messages: ChatMessage[],
+  apiKey: string,
+  model: string | undefined,
+  callback: StreamCallback
+): Promise<void> {
   const anthropic = new Anthropic({
     apiKey: apiKey,
     dangerouslyAllowBrowser: true,
@@ -132,7 +179,7 @@ async function callAnthropicStreaming(messages: ChatMessage[], apiKey: string, c
 
   try {
     const stream = await anthropic.messages.create({
-      model: ANTHROPIC_MODEL,
+      model: model || DEFAULT_MODELS.anthropic,
       max_tokens: 4096,
       messages: userMessages.map((m) => ({
         role: m.role === "assistant" ? "assistant" : "user",
@@ -143,9 +190,9 @@ async function callAnthropicStreaming(messages: ChatMessage[], apiKey: string, c
     });
 
     for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
         callback.onToken(event.delta.text);
-      } else if (event.type === 'message_stop') {
+      } else if (event.type === "message_stop") {
         callback.onComplete();
         return;
       }
@@ -155,7 +202,12 @@ async function callAnthropicStreaming(messages: ChatMessage[], apiKey: string, c
   }
 }
 
-async function callCohereStreaming(messages: ChatMessage[], apiKey: string, callback: StreamCallback): Promise<void> {
+async function callCohereStreaming(
+  messages: ChatMessage[],
+  apiKey: string,
+  model: string | undefined,
+  callback: StreamCallback
+): Promise<void> {
   const cohere = new CohereClient({
     token: apiKey,
   });
@@ -167,18 +219,18 @@ async function callCohereStreaming(messages: ChatMessage[], apiKey: string, call
 
   try {
     const stream = await cohere.chatStream({
-      model: COHERE_MODEL,
+      model: model || DEFAULT_MODELS.cohere,
       message: lastMessage.content,
       preamble: systemMessage?.content || "",
     });
 
     for await (const event of stream) {
-      if (event.eventType === 'text-generation') {
+      if (event.eventType === "text-generation") {
         const content = event.text;
         if (content) {
           callback.onToken(content);
         }
-      } else if (event.eventType === 'stream-end') {
+      } else if (event.eventType === "stream-end") {
         callback.onComplete();
         return;
       }
@@ -192,15 +244,16 @@ async function callCohereStreaming(messages: ChatMessage[], apiKey: string, call
 export async function callLLM(
   messages: ChatMessage[],
   provider: string,
-  apiKey: string
+  apiKey: string,
+  model?: string
 ): Promise<string> {
   switch (provider) {
     case "openai":
-      return await callOpenAI(messages, apiKey);
+      return await callOpenAI(messages, apiKey, model);
     case "anthropic":
-      return await callAnthropic(messages, apiKey);
+      return await callAnthropic(messages, apiKey, model);
     case "cohere":
-      return await callCohere(messages, apiKey);
+      return await callCohere(messages, apiKey, model);
     default:
       throw new Error(`Unknown provider: ${provider}`);
   }
@@ -211,17 +264,17 @@ export async function callLLMStreaming(
   messages: ChatMessage[],
   provider: string,
   apiKey: string,
+  model: string | undefined,
   callback: StreamCallback
 ): Promise<void> {
   switch (provider) {
     case "openai":
-      return await callOpenAIStreaming(messages, apiKey, callback);
+      return await callOpenAIStreaming(messages, apiKey, model, callback);
     case "anthropic":
-      return await callAnthropicStreaming(messages, apiKey, callback);
+      return await callAnthropicStreaming(messages, apiKey, model, callback);
     case "cohere":
-      return await callCohereStreaming(messages, apiKey, callback);
+      return await callCohereStreaming(messages, apiKey, model, callback);
     default:
       callback.onError(new Error(`Unknown provider: ${provider}`));
   }
 }
-

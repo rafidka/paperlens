@@ -26,6 +26,7 @@ import {
   closeSetupModal,
   openLibraryPanel,
   closeLibraryPanel,
+  updateModelSelection,
 } from "./ui.js";
 
 interface PaperData {
@@ -201,7 +202,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
 
       let accumulatedContent = "";
 
-      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
         onToken: (token) => {
           accumulatedContent += token;
           if (summaryContent) {
@@ -223,7 +224,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
       });
     } else {
       // Regular mode
-      const summary = await callLLM(messages, llmConfig.provider, llmConfig.key);
+      const summary = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
 
       currentPaper!.summary = summary;
       if (summaryContent) {
@@ -288,7 +289,7 @@ async function extractConcepts(): Promise<void> {
 
       let accumulatedContent = "";
 
-      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
         onToken: (token) => {
           accumulatedContent += token;
           if (conceptsContent) {
@@ -310,7 +311,7 @@ async function extractConcepts(): Promise<void> {
       });
     } else {
       // Regular mode
-      const concepts = await callLLM(messages, llmConfig.provider, llmConfig.key);
+      const concepts = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
 
       currentPaper!.concepts = concepts;
       if (conceptsContent) {
@@ -378,7 +379,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
 
       let accumulatedContent = "";
 
-      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
         onToken: (token) => {
           accumulatedContent += token;
           if (accessibleContent) {
@@ -400,7 +401,7 @@ ${currentPaper.content.substring(0, MAX_PAPER_LENGTH)}`,
       });
     } else {
       // Regular mode
-      const accessibleVersion = await callLLM(messages, llmConfig.provider, llmConfig.key);
+      const accessibleVersion = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
 
       currentPaper!.accessible = accessibleVersion;
       if (accessibleContent) {
@@ -477,7 +478,7 @@ Question: ${question}`,
 
       let accumulatedAnswer = "";
 
-      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, {
+      await callLLMStreaming(messages, llmConfig.provider, llmConfig.key, llmConfig.model, {
         onToken: (token) => {
           accumulatedAnswer += token;
           qaHistory[qaHistory.length - 1].answer = accumulatedAnswer;
@@ -501,7 +502,7 @@ Question: ${question}`,
       });
     } else {
       // Regular mode
-      const answer = await callLLM(messages, llmConfig.provider, llmConfig.key);
+      const answer = await callLLM(messages, llmConfig.provider, llmConfig.key, llmConfig.model);
 
       qaHistory.push({ question, answer });
       updateQAHistory(qaHistory);
@@ -644,6 +645,7 @@ function initializeApp(): void {
   (window as any).closeSetupModal = closeSetupModal;
   (window as any).openLibraryPanel = openLibraryPanel;
   (window as any).closeLibraryPanel = closeLibraryPanel;
+  (window as any).updateModelSelection = updateModelSelection;
 
   // Event listeners
   const qaInput = document.getElementById("qa-input");

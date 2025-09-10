@@ -30,6 +30,7 @@ const CACHE_PREFIX = 'paperlens_';
 const LIBRARY_KEY = 'paperlens_library';
 const API_KEYS_KEY = 'paperlens_api_keys';
 const ACTIVE_PROVIDER_KEY = 'paperlens_active_provider';
+const MODEL_SELECTIONS_KEY = 'paperlens_model_selections';
 
 export function getCacheKey(arxivId: string): string {
     return CACHE_PREFIX + arxivId;
@@ -102,6 +103,7 @@ export interface SavedApiKeys {
 export interface ActiveProvider {
     provider: 'openai' | 'anthropic' | 'cohere';
     apiKey: string;
+    model?: string; // Selected model for the provider
 }
 
 export function getSavedApiKeys(): SavedApiKeys {
@@ -136,9 +138,11 @@ export function getActiveProvider(): ActiveProvider | null {
     
     // Verify the active provider still has a saved key
     if (savedKeys[activeProvider.provider]) {
+        const modelSelections = getModelSelections();
         return {
             provider: activeProvider.provider,
-            apiKey: savedKeys[activeProvider.provider]
+            apiKey: savedKeys[activeProvider.provider],
+            model: modelSelections[activeProvider.provider]
         };
     }
     
@@ -182,4 +186,25 @@ export function getStreamingEnabled(): boolean {
 
 export function setStreamingEnabled(enabled: boolean): void {
     localStorage.setItem(STREAMING_KEY, enabled.toString());
+}
+
+// Model selection management
+export interface ModelSelections {
+    [provider: string]: string; // provider -> selected model
+}
+
+export function getModelSelections(): ModelSelections {
+    const stored = localStorage.getItem(MODEL_SELECTIONS_KEY);
+    return stored ? JSON.parse(stored) : {};
+}
+
+export function saveModelSelection(provider: 'openai' | 'anthropic' | 'cohere', model: string): void {
+    const selections = getModelSelections();
+    selections[provider] = model;
+    localStorage.setItem(MODEL_SELECTIONS_KEY, JSON.stringify(selections));
+}
+
+export function getModelSelection(provider: 'openai' | 'anthropic' | 'cohere'): string | undefined {
+    const selections = getModelSelections();
+    return selections[provider];
 }

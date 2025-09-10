@@ -3,6 +3,7 @@ const CACHE_PREFIX = 'paperlens_';
 const LIBRARY_KEY = 'paperlens_library';
 const API_KEYS_KEY = 'paperlens_api_keys';
 const ACTIVE_PROVIDER_KEY = 'paperlens_active_provider';
+const MODEL_SELECTIONS_KEY = 'paperlens_model_selections';
 export function getCacheKey(arxivId) {
     return CACHE_PREFIX + arxivId;
 }
@@ -83,9 +84,11 @@ export function getActiveProvider() {
     const savedKeys = getSavedApiKeys();
     // Verify the active provider still has a saved key
     if (savedKeys[activeProvider.provider]) {
+        const modelSelections = getModelSelections();
         return {
             provider: activeProvider.provider,
-            apiKey: savedKeys[activeProvider.provider]
+            apiKey: savedKeys[activeProvider.provider],
+            model: modelSelections[activeProvider.provider]
         };
     }
     // If not, clear the invalid active provider
@@ -120,4 +123,17 @@ export function getStreamingEnabled() {
 }
 export function setStreamingEnabled(enabled) {
     localStorage.setItem(STREAMING_KEY, enabled.toString());
+}
+export function getModelSelections() {
+    const stored = localStorage.getItem(MODEL_SELECTIONS_KEY);
+    return stored ? JSON.parse(stored) : {};
+}
+export function saveModelSelection(provider, model) {
+    const selections = getModelSelections();
+    selections[provider] = model;
+    localStorage.setItem(MODEL_SELECTIONS_KEY, JSON.stringify(selections));
+}
+export function getModelSelection(provider) {
+    const selections = getModelSelections();
+    return selections[provider];
 }

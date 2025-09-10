@@ -15,7 +15,10 @@ import {
   hasSavedKeys,
   getStreamingEnabled,
   setStreamingEnabled,
+  saveModelSelection,
+  getModelSelection,
 } from "./cache.js";
+import { AVAILABLE_MODELS } from "./llm.js";
 
 interface QAItem {
   question: string;
@@ -428,10 +431,12 @@ export function toggleSetup(): void {
 export function updateProviderUI(): void {
   const providerSelect = document.getElementById("provider-select") as HTMLSelectElement;
   const apiKeyInput = document.getElementById("api-key-input") as HTMLInputElement;
+  const modelSelectGroup = document.getElementById("model-select-group");
+  const modelSelect = document.getElementById("model-select") as HTMLSelectElement;
 
   if (!providerSelect || !apiKeyInput) return;
 
-  const provider = providerSelect.value;
+  const provider = providerSelect.value as "openai" | "anthropic" | "cohere" | "";
 
   if (provider) {
     const placeholders = {
@@ -442,21 +447,39 @@ export function updateProviderUI(): void {
     apiKeyInput.placeholder = placeholders[provider as keyof typeof placeholders];
     apiKeyInput.disabled = false;
     apiKeyInput.value = ""; // Always start fresh
+
+    // Show and populate model selection
+    if (modelSelectGroup && modelSelect) {
+      modelSelectGroup.style.display = "block";
+      const models = AVAILABLE_MODELS[provider];
+      const savedModel = getModelSelection(provider);
+      
+      modelSelect.innerHTML = models.map((model, index) => 
+        `<option value="${model.id}" ${(savedModel === model.id || (!savedModel && index === 0)) ? 'selected' : ''}>${model.name}</option>`
+      ).join('');
+    }
   } else {
     apiKeyInput.placeholder = "Select a provider first";
     apiKeyInput.disabled = true;
     apiKeyInput.value = "";
+    
+    // Hide model selection
+    if (modelSelectGroup) {
+      modelSelectGroup.style.display = "none";
+    }
   }
 }
 
 export function saveApiKeyFromUI(): void {
   const providerSelect = document.getElementById("provider-select") as HTMLSelectElement;
   const apiKeyInput = document.getElementById("api-key-input") as HTMLInputElement;
+  const modelSelect = document.getElementById("model-select") as HTMLSelectElement;
 
   if (!providerSelect || !apiKeyInput) return;
 
   const provider = providerSelect.value as "openai" | "anthropic" | "cohere";
   const apiKey = apiKeyInput.value.trim();
+  const model = modelSelect?.value;
 
   if (!provider) {
     showError("Please select a provider");
@@ -468,8 +491,11 @@ export function saveApiKeyFromUI(): void {
     return;
   }
 
-  // Save the key and make it active
+  // Save the key, model selection, and make it active
   saveApiKey(provider, apiKey);
+  if (model) {
+    saveModelSelection(provider, model);
+  }
   setActiveProvider(provider);
   updateActiveProviderDisplay();
   updateFirstTimeUserGuidance(); // Update UI guidance after saving key
@@ -482,6 +508,12 @@ export function saveApiKeyFromUI(): void {
   providerSelect.value = "";
   apiKeyInput.disabled = true;
   apiKeyInput.placeholder = "Select a provider first";
+  
+  // Hide model selection
+  const modelSelectGroup = document.getElementById("model-select-group");
+  if (modelSelectGroup) {
+    modelSelectGroup.style.display = "none";
+  }
 
   // Auto-collapse setup section
   const setupContent = document.getElementById("setup-content");
@@ -544,22 +576,46 @@ function updateActiveProviderDisplay(): void {
   for (const [provider, apiKey] of Object.entries(savedKeys)) {
     const isActive = activeProvider && activeProvider.provider === provider;
     const providerName = providerNames[provider as keyof typeof providerNames] || provider;
+    const modelSelection = getModelSelection(provider as "openai" | "anthropic" | "cohere");
+    const providerModels = AVAILABLE_MODELS[provider as keyof typeof AVAILABLE_MODELS];
+    const modelInfo = modelSelection ? 
+      providerModels?.find(m => m.id === modelSelection) : 
+      providerModels?.[0]; // Use first model as default if no selection
+    const modelName = modelInfo?.name || "Unknown Model";
 
     html += `
-      <div class="saved-key-item ${isActive ? "active" : ""}">
-        <div class="key-info">
-          <span class="provider-name">${providerName}</span>
-          <span class="key-preview">${apiKey.substring(0, 8)}...</span>
-          ${isActive ? '<span class="active-badge">Active</span>' : ""}
+      <div class="saved-key-item ${isActive ? "active" : ""} multi-line">
+        <div class="saved-key-row">
+          <div class="key-info">
+            <span class="provider-name">${providerName}</span>
+            <span class="key-preview">${apiKey.substring(0, 8)}...</span>
+            ${isActive ? 
+              `<span class="active-badge">Active</span>` : 
+              ''
+            }
+          </div>
+          <div class="key-actions">
+            ${!isActive ? 
+              `<button class="btn btn-small btn-primary" onclick="setActiveProviderFromUI('${provider}')">Use</button>` : 
+              ''
+            }
+            <button class="btn btn-small btn-danger" onclick="removeApiKeyFromUI('${provider}')">Remove</button>
+          </div>
         </div>
-        <div class="key-actions">
-          ${
-            !isActive
-              ? `<button class="btn btn-small btn-primary" onclick="setActiveProviderFromUI('${provider}')">Use</button>`
-              : ""
-          }
-          <button class="btn btn-small btn-danger" onclick="removeApiKeyFromUI('${provider}')">Remove</button>
-        </div>
+        ${isActive ? 
+          `<div class="model-selector-row">
+            <label class="model-label">Model:</label>
+            <select class="model-selector" onchange="updateModelSelection('${provider}', this.value)">
+              ${AVAILABLE_MODELS[provider as keyof typeof AVAILABLE_MODELS].map(model => 
+                `<option value="${model.id}" ${model.id === modelSelection ? 'selected' : ''}>${model.name}</option>`
+              ).join('')}
+            </select>
+          </div>` : 
+          `<div class="model-info-row">
+            <span class="model-label">Model:</span>
+            <span class="model-badge">${modelName}</span>
+          </div>`
+        }
       </div>
     `;
   }
@@ -611,6 +667,11 @@ export function openLibraryPanel(): void {
     // Auto-show the library content when panel opens
     showLibrary();
   }
+}
+
+export function updateModelSelection(provider: string, model: string): void {
+  saveModelSelection(provider as "openai" | "anthropic" | "cohere", model);
+  showSuccess(`Model updated for ${provider}`);
 }
 
 export function closeLibraryPanel(): void {
